@@ -1,0 +1,1052 @@
+/* Тема «Кот Слияние» — уютная комната + деревянные элементы */
+
+:root {
+  --color-sky: #8ec8f0;
+  --color-wall: #b8daf5;
+  --color-wall-deep: #6a9ec8;
+  --color-floor: #c49a6c;
+  --color-floor-dark: #8b5a2b;
+  --color-wood-light: #e8c9a0;
+  --color-wood: #c49a6c;
+  --color-wood-mid: #a67c52;
+  --color-wood-dark: #6b4423;
+  --color-wood-border: #4a3018;
+  --color-field: #1a2848;
+  --color-field-top: #243558;
+  --color-green: #4cd964;
+  --color-green-dark: #2a9e3a;
+  --color-blue: #4a9eff;
+  --color-blue-dark: #2a6fc8;
+  --color-orange: #ff9a4a;
+  --color-orange-dark: #d07020;
+  --color-coin: #ffd76a;
+  --color-text: #fff;
+  --color-text-dark: #3d2818;
+  --shadow-soft: 0 8px 32px rgba(20, 30, 60, 0.35);
+  --game-column-width: 440px;
+  --font-game: 'Rubik', system-ui, sans-serif;
+
+  /* In-game UI — glass + cozy room palette */
+  --game-glass: rgba(18, 28, 52, 0.58);
+  --game-glass-strong: rgba(12, 20, 42, 0.72);
+  --game-glass-border: rgba(255, 255, 255, 0.14);
+  --game-glass-highlight: rgba(255, 255, 255, 0.1);
+  --game-accent-purple: #b49ae8;
+  --game-accent-gold: #f2cc6a;
+  --game-frame-trim: rgba(210, 170, 110, 0.65);
+  --game-blur: blur(14px);
+
+  /* Единый UI — модалки, кнопки, панели */
+  --game-modal-bg: #1e2642;
+  --game-modal-border: rgba(130, 170, 230, 0.22);
+  --game-btn-height: 48px;
+  --game-btn-radius: 999px;
+  --game-panel-radius: 16px;
+
+  /* Хаб — кремовые деревянные панели */
+  --hub-panel-bg: linear-gradient(180deg, #fff9ef 0%, #f5e6c8 55%, #edd9b0 100%);
+  --hub-panel-bg-soft: linear-gradient(180deg, #fff6e8 0%, #f0dcc0 100%);
+  --hub-panel-border: #c49a6c;
+  --hub-text: #5c3a1e;
+  --hub-text-muted: #8a6040;
+  --hub-text-accent: #40240d;
+  --hub-chip-bg: #e8cc9b;
+
+  /* Safe-area и адаптивные размеры */
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+  --app-content-padding-x: 14px;
+  --app-content-padding-top: 12px;
+  --app-content-padding-bottom: 20px;
+  --nav-icon-width: clamp(56px, 18vw, 75px);
+  --nav-icon-height: clamp(68px, 22vw, 95px);
+}
+
+/* Фон сцены — на весь экран, без phone frame */
+.scene-bg {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: var(--color-wall-deep);
+  background-image: url('./mobile-bg.png');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .scene-bg {
+    background-image: url('./pc-bg.png');
+    background-position: center center;
+  }
+
+  :root {
+    --game-column-width: 480px;
+  }
+}
+
+.scene-bg::before {
+  content: none;
+}
+
+.scene-column {
+  position: relative;
+  z-index: 1;
+  width: min(100%, var(--game-column-width));
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding:
+    max(var(--app-content-padding-top), var(--app-safe-top))
+    max(var(--app-content-padding-x), var(--app-safe-right))
+    max(var(--app-content-padding-bottom), var(--app-safe-bottom))
+    max(var(--app-content-padding-x), var(--app-safe-left));
+}
+
+.game-screen .scene-column {
+  padding-top: max(8px, var(--app-safe-top));
+  padding-bottom: max(8px, var(--app-safe-bottom));
+}
+
+/* Деревянная рамка игрового поля (хаб и пр.) */
+.game-frame {
+  padding: 10px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, var(--color-wood-light) 0%, var(--color-wood) 18%, var(--color-wood-mid) 55%, var(--color-wood-dark) 100%);
+  border: 4px solid var(--color-wood-border);
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.35),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.25),
+    var(--shadow-soft);
+}
+
+.game-frame__inner {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid #3d2818;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.45);
+}
+
+/* ——— Современный UI игрового экрана ——— */
+.game-screen .game-frame {
+  flex-shrink: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border-radius: 18px;
+  border: 2px solid var(--game-frame-trim);
+  background-color: #141e38;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(8, 12, 28, 0.45);
+}
+
+.game-screen .game-frame__inner {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.game-stat {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px 8px;
+  border-radius: 14px;
+  text-align: center;
+  background: linear-gradient(180deg, #fff9ef 0%, #f5e6c8 55%, #edd9b0 100%);
+  border: 3px solid #c49a6c;
+  box-shadow:
+    0 4px 14px rgba(40, 24, 10, 0.2),
+    inset 0 2px 6px rgba(255, 255, 255, 0.85);
+  color: var(--hub-text-accent);
+  box-sizing: border-box;
+}
+
+/* HUD игрового экрана — одинаковая высота всех элементов */
+.game-screen .game-hud {
+  --game-hud-item-height: 38px;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.game-screen .game-hud .game-hud__pause-img {
+  width: var(--game-hud-item-height);
+  height: var(--game-hud-item-height);
+}
+
+.game-screen .game-hud .game-icon-btn {
+  width: var(--game-hud-item-height);
+  height: var(--game-hud-item-height);
+}
+
+.game-screen .game-hud .game-stat {
+  height: var(--game-hud-item-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 10px;
+  border-width: 2px;
+}
+
+.game-screen .game-hud .game-stat__label {
+  line-height: 1.05;
+  font-size: 8px;
+}
+
+.game-screen .game-hud .game-stat__value {
+  line-height: 1;
+  font-size: clamp(11px, 3.4vw, 16px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-stat__label {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--hub-text-muted);
+}
+
+.game-stat__value {
+  display: block;
+  font-size: clamp(16px, 4.2vw, 20px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--hub-text-accent);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.game-icon-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--game-glass-border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--game-glass);
+  backdrop-filter: var(--game-blur);
+  -webkit-backdrop-filter: var(--game-blur);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.game-icon-btn:hover {
+  background: rgba(30, 44, 78, 0.72);
+}
+
+.game-icon-btn:active {
+  transform: scale(0.96);
+}
+
+.game-screen .game-hud .coin-badge {
+  height: var(--game-hud-item-height);
+  max-width: 100%;
+  padding: 0 8px 0 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #6b4423 0%, #4a2810 100%);
+  border: 2px solid #3d2010;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.28),
+    0 3px 10px rgba(0, 0, 0, 0.35);
+  font-size: clamp(11px, 3.2vw, 14px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-screen .game-hud .coin-badge__icon {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.booster-bar {
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px 10px 6px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fff9ef 0%, #f5e6c8 52%, #edd9b0 100%);
+  border: 2px solid #c49a6c;
+  box-shadow:
+    0 4px 14px rgba(40, 24, 10, 0.2),
+    inset 0 2px 6px rgba(255, 255, 255, 0.88),
+    inset 0 -1px 0 rgba(120, 80, 40, 0.08);
+}
+
+.game-screen .booster-bar {
+  padding: 8px 10px 7px;
+}
+
+/* Деревянные таблички и панели хаба */
+.wood-plaque {
+  padding: 12px 16px;
+  border-radius: 18px;
+  text-align: center;
+  background: var(--hub-panel-bg);
+  border: 3px solid var(--hub-panel-border);
+  box-shadow:
+    0 4px 14px rgba(40, 24, 10, 0.18),
+    inset 0 2px 6px rgba(255, 255, 255, 0.85);
+  color: var(--hub-text);
+}
+
+.wood-plaque__label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--hub-text-muted);
+}
+
+.wood-plaque__value {
+  display: block;
+  font-size: clamp(17px, 4.5vw, 22px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--hub-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.hub-intro {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 249, 239, 0.94);
+  border: 2px solid var(--hub-panel-border);
+  box-shadow: 0 3px 10px rgba(40, 24, 10, 0.12);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--hub-text);
+}
+
+.hub-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(92, 58, 30, 0.14);
+  border: 1px solid rgba(92, 58, 30, 0.12);
+  overflow: hidden;
+}
+
+.hub-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7aed88, #2a9e3a);
+  transition: width 0.3s ease;
+}
+
+.hub-bar__fill--gold {
+  background: linear-gradient(90deg, #ffd76a, #e8a830);
+}
+
+/* Превью котика — пузырь + спрайт из assets/cats */
+.cat-preview {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.cat-preview__circle {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.cat-preview__sprite {
+  position: absolute;
+  left: 50%;
+  bottom: -4%;
+  z-index: 1;
+  transform: translateX(-50%);
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: bottom center;
+  pointer-events: none;
+}
+
+.cat-preview--locked .cat-preview__sprite {
+  opacity: 0.4;
+  filter: grayscale(0.85);
+}
+
+.cat-preview__lock {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--hub-text-muted);
+  pointer-events: none;
+}
+
+/* Панели и карточки хаба */
+.game-panel {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--hub-panel-bg-soft);
+  border: 3px solid var(--hub-panel-border);
+  box-shadow:
+    0 4px 14px rgba(40, 24, 10, 0.16),
+    inset 0 2px 6px rgba(255, 255, 255, 0.75);
+  color: var(--hub-text);
+}
+
+.game-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--hub-panel-bg);
+  border: 3px solid var(--hub-panel-border);
+  box-shadow:
+    0 4px 14px rgba(40, 24, 10, 0.16),
+    inset 0 2px 6px rgba(255, 255, 255, 0.8);
+  color: var(--hub-text);
+}
+
+.rarity-chip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: tomato;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.game-chip {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 2px solid var(--hub-panel-border);
+  border-radius: 12px;
+  background: var(--hub-chip-bg);
+  color: var(--hub-text-accent);
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.45);
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.game-chip:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.game-chip--active {
+  background: linear-gradient(180deg, #7ec0ff 0%, var(--color-blue) 50%, var(--color-blue-dark) 100%);
+  border-color: #2a6fc8;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(42, 111, 200, 0.35);
+}
+
+.game-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Кнопки в стиле макета */
+.game-btn {
+  display: block;
+  width: 100%;
+  min-height: var(--game-btn-height);
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--game-btn-radius);
+  font-family: var(--font-game);
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition:
+    filter 0.15s,
+    transform 0.1s,
+    box-shadow 0.15s;
+}
+
+.game-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.game-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.game-btn--green {
+  background: linear-gradient(180deg, #7aed88 0%, var(--color-green) 50%, var(--color-green-dark) 100%);
+  box-shadow: 0 4px 16px rgba(42, 158, 58, 0.5);
+}
+
+.game-btn--blue {
+  background: linear-gradient(180deg, #7ec0ff 0%, var(--color-blue) 50%, var(--color-blue-dark) 100%);
+  box-shadow: 0 4px 16px rgba(42, 111, 200, 0.5);
+}
+
+.game-btn--orange {
+  background: linear-gradient(180deg, #ffc078 0%, var(--color-orange) 50%, var(--color-orange-dark) 100%);
+  box-shadow: 0 4px 16px rgba(208, 112, 32, 0.5);
+}
+
+.game-btn--round {
+  width: var(--game-btn-height);
+  height: var(--game-btn-height);
+  min-height: var(--game-btn-height);
+  padding: 0;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.game-btn--sm {
+  width: auto;
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+/* Монеты */
+.coin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px 0 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #6b4423 0%, #4a2810 100%);
+  border: 3px solid #3d2010;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.28),
+    0 3px 10px rgba(0, 0, 0, 0.35);
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+}
+
+.coin-badge__icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Хаб — прокручиваемые списки (магазин, коллекция, задания) */
+.hub-list-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Хаб — шапка */
+.hub-header {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.hub-header__title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+  color: #fff;
+  text-shadow:
+    0 2px 0 rgba(60, 36, 16, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.hub-header__spacer {
+  flex: 1;
+}
+
+/* Бустеры — слоты в стиле хаба (legacy, основной UI в BoosterPanel.vue) */
+.booster-slot {
+  position: relative;
+}
+
+/* Модалки — кремовый стиль как пауза */
+.game-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(16px, var(--app-safe-top))
+    max(16px, var(--app-safe-right))
+    max(16px, var(--app-safe-bottom))
+    max(16px, var(--app-safe-left));
+  background: rgba(20, 12, 8, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.game-modal {
+  position: relative;
+  width: min(100%, 340px);
+  padding: 28px 32px 26px;
+  border-radius: 28px;
+  text-align: center;
+  color: var(--hub-text);
+  background: var(--hub-panel-bg);
+  border: 4px solid var(--hub-panel-border);
+  box-shadow:
+    0 16px 48px rgba(40, 24, 10, 0.45),
+    inset 0 2px 6px rgba(255, 255, 255, 0.85);
+}
+
+.game-modal__title {
+  margin: 0 0 16px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--hub-text);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.game-modal__emoji,
+.game-modal__star {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.game-modal__stats {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--hub-panel-bg-soft);
+  border: 2px solid rgba(196, 154, 108, 0.55);
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--hub-text);
+}
+
+.game-modal__stats strong {
+  color: var(--hub-text-accent);
+  font-weight: 800;
+}
+
+.game-modal__hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--hub-text-muted);
+}
+
+.game-modal__cat {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--hub-text-accent);
+}
+
+.game-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-modal__btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.game-modal__btn:hover {
+  filter: brightness(1.04);
+}
+
+.game-modal__btn:active {
+  transform: scale(0.98);
+}
+
+.game-modal__btn img {
+  display: block;
+  width: 100%;
+  height: 49px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(40, 24, 10, 0.28));
+}
+
+.game-modal__actions--spaced {
+  margin-top: 14px;
+}
+
+.game-modal--victory .game-modal__title {
+  color: var(--hub-text-accent);
+}
+
+.game-modal__close {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 3px solid var(--hub-panel-border);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f5e0b8 0%, #d4a574 100%);
+  box-shadow:
+    0 3px 8px rgba(60, 36, 16, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  color: var(--hub-text);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.game-modal__close:active {
+  transform: scale(0.94);
+}
+
+/* Переключатели в модалках */
+.modal-toggles {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.modal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 3px 10px 3px 3px;
+  border-radius: 10px;
+  background: var(--hub-chip-bg);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.45);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--hub-text-accent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.modal-toggle__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, #6b4220 0%, #5b3113 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.22),
+    0 2px 4px rgba(40, 24, 10, 0.25);
+}
+
+.modal-toggle__icon--music {
+  background: linear-gradient(180deg, #206818 0%, #18520e 100%);
+}
+
+.modal-toggle__icon--vibration {
+  background: linear-gradient(180deg, #6b4220 0%, #5b3113 100%);
+}
+
+.modal-toggle__icon :deep(svg) {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.modal-toggle__label {
+  flex: 1;
+}
+
+.modal-toggle--off {
+  opacity: 0.72;
+}
+
+/* Логотип */
+.game-logo {
+  margin: 0;
+  font-size: clamp(34px, 9vw, 48px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: #fff;
+  text-align: center;
+  text-shadow:
+    0 3px 0 #2a6fc8,
+    0 5px 0 #1a4a88,
+    0 8px 16px rgba(0, 0, 0, 0.35);
+  -webkit-text-stroke: 1px rgba(26, 74, 136, 0.5);
+}
+
+.game-logo__accent {
+  color: #ffe08a;
+  text-shadow:
+    0 3px 0 #c48820,
+    0 5px 0 #8a6010,
+    0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Нижняя навигация */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 400px;
+  margin-top: auto;
+  padding: 12px 8px 8px;
+  border-radius: 20px 20px 0 0;
+  background: var(--game-glass);
+  border: 1px solid var(--game-glass-border);
+  border-bottom: none;
+  backdrop-filter: var(--game-blur);
+  -webkit-backdrop-filter: var(--game-blur);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.bottom-nav.hub-nav {
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+  justify-content: space-between;
+  gap: 0;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.bottom-nav.hub-nav .bottom-nav__item {
+  flex: 0 0 auto;
+}
+
+.bottom-nav__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--font-game);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s, opacity 0.15s;
+}
+
+.bottom-nav__item:hover {
+  color: #fff;
+}
+
+/* Тост — деревянная табличка в стиле хаба */
+.game-toast {
+  position: fixed;
+  bottom: calc(80px + var(--app-safe-bottom));
+  left: 50%;
+  max-width: min(calc(100vw - 32px), 360px);
+  transform: translateX(-50%);
+  z-index: 2000;
+  padding: 12px 22px;
+  border-radius: 18px;
+  font-family: var(--font-game);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  letter-spacing: 0.01em;
+  color: var(--hub-text);
+  background: var(--hub-panel-bg);
+  border: 3px solid var(--hub-panel-border);
+  box-shadow:
+    0 6px 20px rgba(40, 24, 10, 0.28),
+    inset 0 2px 6px rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .game-toast {
+    bottom: calc(24px + var(--app-safe-bottom));
+  }
+}
+
+/* ——— Адаптив: узкие и низкие экраны ——— */
+@media (max-width: 360px) {
+  :root {
+    --app-content-padding-x: 10px;
+  }
+
+  .game-modal {
+    padding: 22px 20px 20px;
+  }
+
+  .game-modal__title {
+    font-size: clamp(20px, 6vw, 26px);
+  }
+
+  .modal-toggles {
+    gap: 6px;
+  }
+
+  .modal-toggle {
+    font-size: 11px;
+  }
+
+  .game-screen .game-hud {
+    --game-hud-item-height: 36px;
+    gap: 5px;
+  }
+
+  .game-screen .booster-bar {
+    padding: 6px 8px 5px;
+  }
+}
+
+@container game-ui (max-width: 320px) {
+  .game-screen .game-hud {
+    --game-hud-item-height: 32px;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .game-screen .game-hud .game-stat {
+    padding: 0 4px;
+  }
+
+  .game-screen .game-hud .game-stat__label {
+    display: none;
+  }
+
+  .game-screen .game-hud .game-stat__value {
+    font-size: 11px;
+  }
+
+  .game-screen .game-hud .coin-badge {
+    padding: 0 6px 0 4px;
+    font-size: 11px;
+  }
+
+  .game-screen .game-hud .coin-badge__icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@container game-ui (max-width: 260px) {
+  .game-screen .game-hud .game-hud__stats .game-stat:last-child {
+    display: none;
+  }
+
+  .game-screen .game-hud .game-stat__value {
+    font-size: 10px;
+  }
+
+  .game-screen .game-hud .coin-badge {
+    font-size: 10px;
+    padding: 0 5px 0 3px;
+  }
+
+  .game-screen .game-hud .coin-badge__icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-height: 740px) {
+  .game-screen .game-hud {
+    --game-hud-item-height: 34px;
+    margin-bottom: 6px;
+  }
+
+  .booster-bar {
+    padding: 4px 8px 3px;
+  }
+
+  .game-screen .booster-bar {
+    padding: 5px 8px 4px;
+  }
+
+  .hub-header__title {
+    font-size: clamp(18px, 4.5vw, 22px);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --game-column-width: 520px;
+  }
+}

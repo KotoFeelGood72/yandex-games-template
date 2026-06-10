@@ -41,11 +41,36 @@ export interface Ysdk {
     LoadingAPI?: { ready: () => void }
     GameplayAPI?: { start: () => void; stop: () => void }
   }
+  getPlayer?(opts?: { scopes?: boolean }): Promise<YsdkPlayer>
+  getLeaderboards?(): Promise<unknown>
+  on?(event: 'game_api_pause' | 'game_api_resume', callback: () => void): void
+  off?(event: 'game_api_pause' | 'game_api_resume', callback: () => void): void
+}
+
+export interface YsdkPlayer {
+  getUniqueID(): string
+  getName(): string
+  getData(): Promise<Record<string, unknown>>
+  setData(data: Record<string, unknown>, flush?: boolean): Promise<void>
 }
 
 let ysdk: Ysdk | null = null
 let lang: string = 'ru'
 let initPromise: Promise<Ysdk | null> | null = null
+
+function bindPlatformPauseEvents(sdk: Ysdk): void {
+  if (typeof sdk.on !== 'function') return
+
+  const onPause = (): void => {
+    window.dispatchEvent(new CustomEvent('platform:pause'))
+  }
+  const onResume = (): void => {
+    window.dispatchEvent(new CustomEvent('platform:resume'))
+  }
+
+  sdk.on('game_api_pause', onPause)
+  sdk.on('game_api_resume', onResume)
+}
 
 /**
  * Wait for `window.YaGames` to become available. The SDK <script> tag is
@@ -73,8 +98,9 @@ export function initYandex(): Promise<Ysdk | null> {
 
   const p: Promise<Ysdk | null> = waitForYaGames().then((YaGames: any) => {
     if (!YaGames || typeof YaGames.init !== 'function') {
-      // Local dev or platform without SDK — caller falls back to dev stubs.
-      console.info('[yandex sdk] YaGames not present — running without SDK (dev mode ok)')
+      if (import.meta.env.DEV) {
+        console.info('[yandex sdk] YaGames not present — running without SDK (dev mode ok)')
+      }
       return null
     }
     return YaGames.init()
@@ -82,11 +108,14 @@ export function initYandex(): Promise<Ysdk | null> {
         ysdk = sdk
         const detected = sdk.environment?.i18n?.lang
         if (detected) lang = detected
-        console.info('[yandex sdk] initialized', { lang, env: sdk.environment })
+        bindPlatformPauseEvents(sdk)
+        if (import.meta.env.DEV) {
+          console.info('[yandex sdk] initialized', { lang, env: sdk.environment })
+        }
         return sdk
       })
       .catch((err: unknown) => {
-        console.warn('[yandex sdk] init failed', err)
+        if (import.meta.env.DEV) console.warn('[yandex sdk] init failed', err)
         return null
       })
   })
@@ -127,7 +156,9 @@ function syncGameplay() {
     if (want === 'start') ysdk?.features?.GameplayAPI?.start()
     else ysdk?.features?.GameplayAPI?.stop()
   } catch (err) {
-    console.warn('[yandex sdk] GameplayAPI.' + want + '() failed', err)
+    if (import.meta.env.DEV) {
+      console.warn('[yandex sdk] GameplayAPI.' + want + '() failed', err)
+    }
   }
 }
 
@@ -153,25 +184,50 @@ export function gameplayResume(): void {
 
 let reviewRequested = false
 
-/**
- * Запрос оценки игры в Яндекс Играх. Окно покажется только если canReview()
- * вернул true (Яндекс сам решает по своим лимитам). Безопасно дёргать
- * несколько раз — внутренний флаг блокирует повторы за сессию.
- */
-export async function tryRequestReview(): Promise<void> {
-  if (reviewRequested) return
+/** Можно ли показать нашу модалку с предложением оценить (без вызова SDK-диалога). */
+export async function checkCanReview(): Promise<boolean> {
+  if (reviewRequested) return false
   const sdk = getYsdk()
-  if (!sdk?.feedback) return
-  reviewRequested = true
+  if (!sdk?.feedback) return import.meta.env.DEV
+  try {
+    const { value } = await sdk.feedback.canReview()
+    return value
+  } catch {
+    return false
+  }
+}
+
+/** Нативное окно оценки Яндекс Игр (после нажатия «Оценить» в нашей модалке). */
+export async function openPlatformReview(): Promise<boolean> {
+  if (reviewRequested) return false
+  const sdk = getYsdk()
+  if (!sdk?.feedback) {
+    if (import.meta.env.DEV) {
+      reviewRequested = true
+      console.info('[yandex sdk] review (dev stub)')
+      return true
+    }
+    return false
+  }
   try {
     const { value, reason } = await sdk.feedback.canReview()
     if (!value) {
-      console.info('[yandex sdk] review unavailable:', reason)
-      return
+      if (import.meta.env.DEV) console.info('[yandex sdk] review unavailable:', reason)
+      return false
     }
+    reviewRequested = true
     const { feedbackSent } = await sdk.feedback.requestReview()
-    console.info('[yandex sdk] review sent:', feedbackSent)
+    if (import.meta.env.DEV) console.info('[yandex sdk] review sent:', feedbackSent)
+    return feedbackSent
   } catch (err) {
-    console.warn('[yandex sdk] requestReview failed', err)
+    if (import.meta.env.DEV) console.warn('[yandex sdk] requestReview failed', err)
+    reviewRequested = false
+    return false
   }
+}
+
+/** @deprecated Используйте checkCanReview + openPlatformReview */
+export async function tryRequestReview(): Promise<void> {
+  if (!(await checkCanReview())) return
+  await openPlatformReview()
 }

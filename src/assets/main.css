@@ -1,25 +1,61 @@
-@import '@fontsource/fredoka/400.css';
-@import '@fontsource/fredoka/500.css';
-@import '@fontsource/fredoka/600.css';
-@import '@fontsource/fredoka/700.css';
-@import '@fontsource/fredoka/latin-ext-400.css';
-@import '@fontsource/fredoka/latin-ext-500.css';
-@import '@fontsource/fredoka/latin-ext-600.css';
-@import '@fontsource/fredoka/latin-ext-700.css';
-
 @import './base.css';
+@import './game-theme.css';
+@import '@fontsource/rubik/latin-600.css';
+@import '@fontsource/rubik/latin-700.css';
+@import '@fontsource/rubik/latin-800.css';
+@import '@fontsource/rubik/cyrillic-600.css';
+@import '@fontsource/rubik/cyrillic-700.css';
+@import '@fontsource/rubik/cyrillic-800.css';
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0;
-  font-weight: normal;
+:root {
+  --font-game: 'Rubik', system-ui, sans-serif;
 }
 
-/* Custom cursor — enforced with !important so scoped component styles
-   (cursor: pointer на кнопках и т.п.) не перебивают глобальный курсор. */
-*,
-*::before,
-*::after {
-  cursor: url('./cursor.png') 0 0, auto !important;
+#app {
+  width: 100%;
+  height: 100dvh;
+  margin: 0 auto;
+  padding: 0;
+  font-family: var(--font-game);
+  font-weight: 600;
+}
+
+/* Основная кнопка в модалках (без PNG-фона) */
+.modal-primary-btn {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 16px;
+  min-height: 48px;
+  border: 3px solid #2a1a0f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #e89540 0%, #c46828 45%, #8f4518 100%);
+  box-shadow:
+    0 4px 0 #5c3410,
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  font-family: var(--font-game);
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  text-shadow:
+    0 1px 0 #000,
+    0 2px 4px rgba(0, 0, 0, 0.65);
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.modal-primary-btn:hover {
+  filter: brightness(1.06);
+}
+
+.modal-primary-btn:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 #5c3410,
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }

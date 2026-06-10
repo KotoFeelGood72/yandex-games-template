@@ -37,3 +37,8 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Local / dev artifacts
+.cursor/
+recordings/
+_count.txt

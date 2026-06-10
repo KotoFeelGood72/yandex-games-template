@@ -63,6 +63,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+:focus,
+:focus-visible {
+  outline: none;
+}
+
 img {
   -webkit-user-drag: none;
   user-drag: none;
@@ -77,6 +82,7 @@ body {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--color-text);
   background: var(--color-background);
   transition:

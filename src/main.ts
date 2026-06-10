@@ -5,7 +5,9 @@ import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
-import { initYandex, getYsdk, gameplayInit, gameplayPause, gameplayResume } from '@/yandex/sdk'
+import { vGsapPress } from '@/directives/gsapPress'
+import { gameplayPause, gameplayResume } from '@/yandex/sdk'
+import { bindProgressLifecycle } from '@/yandex/progressLifecycle'
 
 window.addEventListener('contextmenu', (e) => e.preventDefault())
 window.addEventListener('selectstart', (e) => e.preventDefault())
@@ -19,23 +21,17 @@ document.addEventListener(
   { passive: false },
 )
 
-initYandex().finally(() => {
-  const app = createApp(App)
-  app.use(createPinia())
-  app.use(router)
-  app.mount('#app')
-
-  requestAnimationFrame(() => {
-    try {
-      ;(window as any).YaGames && getYsdk()?.features?.LoadingAPI?.ready()
-    } catch (err) {
-      console.warn('[yandex sdk] LoadingAPI.ready() failed', err)
-    }
-    gameplayInit()
-  })
-})
+const app = createApp(App)
+app.directive('gsap-press', vGsapPress)
+app.use(createPinia())
+app.use(router)
+app.mount('#app')
+bindProgressLifecycle()
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) gameplayPause()
   else gameplayResume()
 })
+
+window.addEventListener('ads:pause', () => gameplayPause())
+window.addEventListener('ads:resume', () => gameplayResume())
