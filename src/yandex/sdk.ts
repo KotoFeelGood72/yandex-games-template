@@ -45,6 +45,8 @@ export interface Ysdk {
   getLeaderboards?(): Promise<unknown>
   on?(event: 'game_api_pause' | 'game_api_resume', callback: () => void): void
   off?(event: 'game_api_pause' | 'game_api_resume', callback: () => void): void
+  /** Серверное время в мс — защищено от подмены системных часов. */
+  serverTime(): number
 }
 
 export interface YsdkPlayer {
@@ -57,6 +59,24 @@ export interface YsdkPlayer {
 let ysdk: Ysdk | null = null
 let lang: string = 'ru'
 let initPromise: Promise<Ysdk | null> | null = null
+let sessionStartMs: number | null = null
+
+/** Серверное время Yandex SDK; в dev без SDK — локальное время. */
+export function getServerTime(): number {
+  try {
+    return ysdk?.serverTime() ?? Date.now()
+  } catch {
+    return Date.now()
+  }
+}
+
+/** Момент старта сессии по серверному времени (для кулдаунов рекламы). */
+export function getSessionStartMs(): number {
+  if (sessionStartMs === null) {
+    sessionStartMs = getServerTime()
+  }
+  return sessionStartMs
+}
 
 function bindPlatformPauseEvents(sdk: Ysdk): void {
   if (typeof sdk.on !== 'function') return
@@ -106,6 +126,7 @@ export function initYandex(): Promise<Ysdk | null> {
     return YaGames.init()
       .then((sdk: Ysdk) => {
         ysdk = sdk
+        sessionStartMs = getServerTime()
         const detected = sdk.environment?.i18n?.lang
         if (detected) lang = detected
         bindPlatformPauseEvents(sdk)

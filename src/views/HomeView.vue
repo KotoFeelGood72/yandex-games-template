@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import gsap from 'gsap'
 
+import AdCountdownModal from '@/components/AdCountdownModal.vue'
 import BoosterPanel from '@/components/BoosterPanel.vue'
 import GameCanvas from '@/components/GameCanvas.vue'
 import GameHud from '@/components/GameHud.vue'
@@ -17,6 +18,7 @@ import TutorialModal from '@/components/TutorialModal.vue'
 import VictoryModal from '@/components/VictoryModal.vue'
 import { isHubState } from '@/game/types/game.types'
 import type { GameEngine } from '@/game/engine/GameEngine'
+import { useGameplayInterstitialSchedule } from '@/composables/useGameplayInterstitialSchedule'
 import { showInterstitialThen, showRewarded, showStartupInterstitial } from '@/ads/ads'
 import { pauseMusic, resumeMusic } from '@/audio/sounds'
 import { useGameStore } from '@/stores/game'
@@ -33,6 +35,9 @@ const gameCanvasRef = ref<InstanceType<typeof GameCanvas> | null>(null)
 const gameScreenRef = ref<HTMLElement | null>(null)
 
 const isPlaying = computed(() => store.gameState === 'playing')
+const { showCountdown, countdown, isGameplayBlocked, resetSchedule } =
+  useGameplayInterstitialSchedule(isPlaying)
+const isCanvasActive = computed(() => isPlaying.value && !isGameplayBlocked.value)
 const showGameScreen = computed(() =>
   ['playing', 'paused', 'gameOver', 'victory'].includes(store.gameState),
 )
@@ -68,6 +73,10 @@ watch(
   (state, prev) => {
     syncMusicWithGameState(state)
 
+    if (state === 'playing' && prev !== 'paused') {
+      resetSchedule()
+    }
+
     const engine = engineRef.value
     if (engine) {
       if (state === 'playing') {
@@ -100,6 +109,7 @@ function onRestart(): void {
     () => {
       engineRef.value?.start()
       store.restartGame()
+      resetSchedule()
     },
     'restart',
     { userInitiated: true },
@@ -183,7 +193,7 @@ onUnmounted(() => {
           <GameHud @pause="onPause" />
           <GameCanvas
             ref="gameCanvasRef"
-            :active="isPlaying"
+            :active="isCanvasActive"
             @engine-ready="onEngineReady"
             @layout-change="onGameLayout"
           />
@@ -215,6 +225,8 @@ onUnmounted(() => {
     <TutorialModal :show="store.gameState === 'tutorial'" />
 
     <SettingsModal :show="showSettings" @close="showSettings = false" />
+
+    <AdCountdownModal :show="showCountdown" :countdown="countdown" />
 
     <GameToast />
   </div>

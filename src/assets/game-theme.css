@@ -1164,38 +1164,33 @@
   color: #fff;
 }
 
-/* Тост награды — яркая плашка над нижним меню (в хабе) или у низа экрана (в игре) */
+/* Тост — компактная деревянная плашка в стиле хаба */
 .game-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(20px + var(--app-safe-bottom));
+  bottom: calc(96px + var(--app-safe-bottom));
   z-index: 2000;
   box-sizing: border-box;
-  width: min(
-    calc(100vw - 2 * max(var(--app-content-padding-x), var(--app-safe-left))),
-    calc(var(--game-column-width) - 2 * var(--app-content-padding-x))
-  );
-  max-width: min(
-    calc(100vw - 2 * max(var(--app-content-padding-x), var(--app-safe-left))),
-    calc(var(--game-column-width) - 2 * var(--app-content-padding-x))
-  );
-  padding: 14px 16px;
-  border-radius: 14px;
+  width: auto;
+  max-width: min(calc(100vw - 32px), 280px);
+  padding: 8px 16px;
+  border-radius: 12px;
   font-family: var(--font-game);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.25;
   text-align: center;
   letter-spacing: 0.02em;
-  color: #4a2400;
-  background: linear-gradient(180deg, #fff6b0 0%, #ffd84a 42%, #ffb800 100%);
-  border: 3px solid #f59a00;
+  color: var(--hub-text-accent);
+  background: var(--hub-panel-bg-soft);
+  border: 2px solid var(--hub-panel-border);
   box-shadow:
-    0 6px 24px rgba(255, 168, 0, 0.45),
-    inset 0 2px 0 rgba(255, 255, 255, 0.85);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+    0 4px 14px rgba(40, 24, 10, 0.22),
+    inset 0 2px 5px rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
   pointer-events: none;
   overflow: visible;
+  white-space: nowrap;
 }
 
 .game-toast--hub {

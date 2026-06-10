@@ -3,9 +3,8 @@
 // non-Vue code (this module) doesn't need to import the game/store.
 
 import { ref, readonly } from 'vue'
-import { getYsdk } from '@/yandex/sdk'
+import { getServerTime, getSessionStartMs, getYsdk } from '@/yandex/sdk'
 
-const SESSION_START = Date.now()
 const FIRST_AD_GAP = 60_000 // no interstitial in first minute (Yandex requirement)
 const INTERSTITIAL_MIN_GAP = 90_000 // our cooldown — 30s stricter than SDK
 const USER_INTERSTITIAL_MIN_GAP = 30_000 // минимум между рекламами по явному действию игрока
@@ -14,6 +13,8 @@ const INTER_TO_REWARD_GAP = 30_000 // don't pile ads back-to-back
 export interface InterstitialOptions {
   /** Явный клик игрока (новая игра, рестарт) — не блокировать FIRST_AD_GAP */
   userInitiated?: boolean
+  /** Плановая реклама в геймплее (каждые 2 мин) */
+  scheduled?: boolean
 }
 
 let lastInterstitialAt = 0
@@ -41,7 +42,7 @@ const UI_AFTER_AD_GAP = 5_000
 
 export function msSinceLastAd(): number {
   if (lastAnyAdAt === 0) return Number.POSITIVE_INFINITY
-  return Date.now() - lastAnyAdAt
+  return getServerTime() - lastAnyAdAt
 }
 
 /**
@@ -71,10 +72,11 @@ export function canShowInterstitial(options?: InterstitialOptions): boolean {
   if (adPlaying.value) return false
 
   const userInitiated = options?.userInitiated === true
-  if (import.meta.env.DEV && userInitiated) return true
+  const scheduled = options?.scheduled === true
+  if (import.meta.env.DEV && (userInitiated || scheduled)) return true
 
-  const now = Date.now()
-  if (!userInitiated && now - SESSION_START < FIRST_AD_GAP) return false
+  const now = getServerTime()
+  if (!userInitiated && now - getSessionStartMs() < FIRST_AD_GAP) return false
 
   const minGap = userInitiated ? USER_INTERSTITIAL_MIN_GAP : INTERSTITIAL_MIN_GAP
   if (now - lastInterstitialAt < minGap) return false
@@ -128,7 +130,7 @@ export function showStartupInterstitial(onDone?: () => void): void {
   }
 
   startupAdShown = true
-  lastInterstitialAt = Date.now()
+  lastInterstitialAt = getServerTime()
   lastAnyAdAt = lastInterstitialAt
 
   const ysdk = getYsdk()
@@ -185,7 +187,7 @@ export function showInterstitialThen(
     return
   }
 
-  lastInterstitialAt = Date.now()
+  lastInterstitialAt = getServerTime()
   lastAnyAdAt = lastInterstitialAt
 
   const ysdk = getYsdk()
@@ -214,7 +216,7 @@ export function showInterstitialThen(
  */
 export function showRewarded(onReward: () => void): void {
   if (adPlaying.value) return
-  lastAnyAdAt = Date.now()
+  lastAnyAdAt = getServerTime()
 
   const ysdk = getYsdk()
   if (!ysdk) {

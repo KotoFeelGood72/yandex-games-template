@@ -36,11 +36,16 @@ function activate(type: BoosterType): void {
   store.activateBooster(type)
 }
 
+const receivedMessages: Record<BoosterType, string> = {
+  bomb: 'Бомба получена!',
+  rainbow: 'Клубок получен!',
+  cookie: 'Печенье получено!',
+}
+
 function watchAdForBooster(type: BoosterType): void {
-  const booster = boosters.find((item) => item.type === type)
   showRewarded(() => {
     player.addBooster(type, 1)
-    store.showToast(`${booster?.label ?? 'Бустер'} получен!`)
+    store.showToast(receivedMessages[type])
   })
 }
 
@@ -73,28 +78,20 @@ function onSlotClick(type: BoosterType): void {
         "
         @click="onSlotClick(b.type)"
       >
+        <img
+          v-if="boosterCount(b.type) <= 0"
+          class="booster-slot__ad-badge"
+          :src="adIcon"
+          alt=""
+          aria-hidden="true"
+        />
         <span class="booster-slot__icon-wrap">
-          <img
-            v-if="boosterCount(b.type) > 0"
-            class="booster-slot__icon"
-            :src="b.icon"
-            alt=""
-            aria-hidden="true"
-          />
-          <img
-            v-else
-            class="booster-slot__ad-icon"
-            :src="adIcon"
-            alt=""
-            aria-hidden="true"
-          />
+          <img class="booster-slot__icon" :src="b.icon" alt="" aria-hidden="true" />
           <span v-if="boosterCount(b.type) > 0" class="booster-slot__count">
             {{ boosterCount(b.type) }}
           </span>
         </span>
-        <span class="booster-slot__hint">
-          {{ boosterCount(b.type) > 0 ? b.hint : 'За рекламу' }}
-        </span>
+        <span class="booster-slot__hint">{{ b.hint }}</span>
       </button>
     </div>
   </div>
@@ -179,13 +176,17 @@ function onSlotClick(type: BoosterType): void {
   filter: drop-shadow(0 2px 3px rgba(40, 24, 10, 0.22));
 }
 
-.booster-slot__ad-icon {
-  width: 42px;
-  height: 42px;
+.booster-slot__ad-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
-  display: block;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(42, 111, 200, 0.28));
+  transform: rotate(35deg);
+  filter: drop-shadow(0 2px 4px rgba(42, 111, 200, 0.35));
 }
 
 .booster-slot__hint {
@@ -240,9 +241,11 @@ function onSlotClick(type: BoosterType): void {
     height: 40px;
   }
 
-  .booster-slot__ad-icon {
-    width: 36px;
-    height: 36px;
+  .booster-slot__ad-badge {
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
   }
 
   .booster-slot__hint {
