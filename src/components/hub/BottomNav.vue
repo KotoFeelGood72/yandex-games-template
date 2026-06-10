@@ -1,24 +1,18 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref, watch } from 'vue'
-
-import collectionIcon from '@/assets/ui/nav/collection.png'
-import homeIcon from '@/assets/ui/nav/home.png'
-import shopIcon from '@/assets/ui/nav/shop.png'
-import tasksIcon from '@/assets/ui/nav/tasks.png'
+import collectionIcon from '@/assets/ui/nav/collection.jpg'
+import homeIcon from '@/assets/ui/nav/home.jpg'
+import shopIcon from '@/assets/ui/nav/shop.jpg'
+import tasksIcon from '@/assets/ui/nav/tasks.jpg'
 import type { HubScreen } from '@/game/types/game.types'
-import { applyHubNavActiveState } from '@/shared/animations/gsapPresets'
 import { useGameStore } from '@/stores/game'
 import { usePlayerStore } from '@/stores/playerStore'
 
-const props = defineProps<{
+defineProps<{
   active: HubScreen
 }>()
 
 const store = useGameStore()
 const player = usePlayerStore()
-
-const navRef = ref<HTMLElement | null>(null)
-const glowRefs = ref<(HTMLElement | null)[]>([])
 
 const items: { id: HubScreen; icon: string; label: string }[] = [
   { id: 'shop', icon: shopIcon, label: 'Магазин' },
@@ -27,41 +21,15 @@ const items: { id: HubScreen; icon: string; label: string }[] = [
   { id: 'tasks', icon: tasksIcon, label: 'Задания' },
 ]
 
-function activeIndex(): number {
-  return items.findIndex((item) => item.id === props.active)
-}
-
-function syncActiveVisuals(): void {
-  const nav = navRef.value
-  if (!nav) return
-
-  const buttons = Array.from(nav.querySelectorAll<HTMLElement>('.hub-nav__item'))
-  const glows = glowRefs.value.filter(Boolean) as HTMLElement[]
-  applyHubNavActiveState(buttons, glows, activeIndex())
-}
-
 function navigate(screen: HubScreen): void {
   store.goToHub(screen)
 }
-
-watch(
-  () => props.active,
-  async () => {
-    await nextTick()
-    syncActiveVisuals()
-  },
-)
-
-onMounted(async () => {
-  await nextTick()
-  syncActiveVisuals()
-})
 </script>
 
 <template>
-  <nav ref="navRef" class="bottom-nav hub-nav" aria-label="Разделы">
+  <nav class="bottom-nav hub-nav" aria-label="Разделы">
     <button
-      v-for="(item, index) in items"
+      v-for="item in items"
       :key="item.id"
       v-gsap-press="0.96"
       type="button"
@@ -72,11 +40,6 @@ onMounted(async () => {
       @click="navigate(item.id)"
     >
       <span class="hub-nav__icon-wrap">
-        <span
-          :ref="(el) => (glowRefs[index] = el as HTMLElement | null)"
-          class="hub-nav__glow"
-          aria-hidden="true"
-        />
         <img class="hub-nav__icon" :src="item.icon" :alt="item.label" />
       </span>
       <span v-if="item.id === 'tasks' && player.pendingQuestsCount() > 0" class="hub-nav__badge">
@@ -99,6 +62,9 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
   padding: 0;
   margin: 0;
   border: none;
@@ -113,52 +79,26 @@ onMounted(async () => {
 .hub-nav__icon-wrap {
   position: relative;
   display: block;
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
+  border-radius: 5px;
+  overflow: hidden;
   line-height: 0;
-}
-
-.hub-nav__glow {
-  position: absolute;
-  left: 50%;
-  bottom: -2px;
-  z-index: 0;
-  width: calc(var(--nav-icon-width) + 18px);
-  height: calc(var(--nav-icon-height) * 0.72);
-  border-radius: 999px;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 228, 120, 0.95) 0%,
-    rgba(255, 196, 64, 0.42) 42%,
-    rgba(255, 196, 64, 0) 72%
-  );
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) scale(0.72);
-  filter: blur(1px);
 }
 
 .hub-nav__icon {
   position: relative;
   z-index: 1;
-  width: var(--nav-icon-width);
-  height: var(--nav-icon-height);
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
   pointer-events: none;
-  transform-origin: center bottom;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35)) brightness(0.82) saturate(0.78);
-  opacity: 0.72;
+  opacity: 0.75;
 }
 
 .hub-nav__item--active .hub-nav__icon {
-  filter: drop-shadow(0 0 10px rgba(255, 220, 110, 0.95))
-    drop-shadow(0 0 18px rgba(255, 180, 40, 0.45)) drop-shadow(0 5px 12px rgba(0, 0, 0, 0.42))
-    brightness(1.06) saturate(1.08);
   opacity: 1;
-}
-
-.hub-nav__item--active .hub-nav__glow {
-  opacity: 1;
-  transform: translateX(-50%) scale(1);
 }
 
 .hub-nav__badge {

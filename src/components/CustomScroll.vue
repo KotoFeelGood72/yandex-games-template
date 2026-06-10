@@ -248,7 +248,7 @@ defineExpose({
 .custom-scroll__track {
   position: relative;
   flex-shrink: 0;
-  width: 28px;
+  width: 20px;
   margin: 2px 0;
   cursor: pointer;
   z-index: 2;
@@ -262,15 +262,12 @@ defineExpose({
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 11px;
+  width: 10px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #1a6438 0%, #0f3f24 55%, #0a2e1a 100%);
-  border: 3px solid #d4b06a;
+  background: linear-gradient(180deg, #fff9ef 0%, #f5e6c8 52%, #edd9b0 100%);
   box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.45),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 1px #8a6334,
-    0 2px 6px rgba(20, 40, 24, 0.35);
+    inset 0 1px 3px rgba(255, 255, 255, 0.85),
+    inset 0 -1px 2px rgba(120, 80, 40, 0.12);
   pointer-events: none;
 }
 
@@ -279,38 +276,45 @@ defineExpose({
   left: 50%;
   top: 0;
   z-index: 1;
-  width: 22px;
+  width: 10px;
+  border: none;
   border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 42%),
-    linear-gradient(180deg, #b8ff8a 0%, #78e84a 38%, #52cf38 72%, #3fb52c 100%);
-  border: 3px solid #e8cf8a;
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.65),
-    inset 0 -3px 0 rgba(40, 120, 32, 0.35),
-    0 0 0 1px #9a6b38,
-    0 3px 8px rgba(26, 80, 30, 0.42);
+  background-color: #e89528;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, transparent 46%, rgba(0, 0, 0, 0.08) 100%),
+    repeating-linear-gradient(
+      -45deg,
+      #ffd060 0,
+      #ffd060 4px,
+      #f0a028 4px,
+      #f0a028 8px
+    );
+  background-size:
+    100% 100%,
+    11.31px 11.31px;
+  animation: custom-scroll-stripes 0.55s linear infinite;
+  box-shadow: 0 1px 4px rgba(40, 24, 10, 0.28);
   cursor: grab;
   touch-action: none;
-}
-
-.custom-scroll__thumb::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 54%;
-  transform: translate(-50%, -50%);
-  width: 13px;
-  height: 13px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cellipse cx='16' cy='22' rx='9' ry='7' fill='%231a5c32'/%3E%3Ccircle cx='8' cy='12' r='4' fill='%231a5c32'/%3E%3Ccircle cx='24' cy='12' r='4' fill='%231a5c32'/%3E%3Ccircle cx='12' cy='7' r='3.5' fill='%231a5c32'/%3E%3Ccircle cx='20' cy='7' r='3.5' fill='%231a5c32'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  pointer-events: none;
+  overflow: hidden;
 }
 
 .custom-scroll__thumb--dragging {
   cursor: grabbing;
-  filter: brightness(1.05);
+  filter: brightness(1.04);
+}
+
+@keyframes custom-scroll-stripes {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
+
+  to {
+    background-position:
+      0 0,
+      11.31px 0;
+  }
 }
 </style>

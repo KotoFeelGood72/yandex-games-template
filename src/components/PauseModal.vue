@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, toRef } from 'vue'
 
+import IconHome from '~icons/mdi/home'
 import IconMusic from '~icons/mdi/music'
 import IconMusicOff from '~icons/mdi/music-off'
+import IconPaw from '~icons/mdi/paw'
+import IconRestart from '~icons/mdi/restart'
 import IconVolumeHigh from '~icons/mdi/volume-high'
 import IconVolumeOff from '~icons/mdi/volume-off'
 
-import continueBtn from '@/assets/ui/buttons/continiue.png'
-import menuBtn from '@/assets/ui/buttons/menu.png'
-import restartBtn from '@/assets/ui/buttons/restart.png'
 import { useGsapModal } from '@/composables/useGsapModal'
 import { useSettingsStore } from '@/stores/settingsStore'
 
@@ -26,7 +26,7 @@ const overlayRef = ref<HTMLElement | null>(null)
 const panelRef = ref<HTMLElement | null>(null)
 
 useGsapModal(toRef(props, 'show'), overlayRef, panelRef, {
-  staggerSelector: '.pause-modal__btn, .pause-modal__toggle',
+  staggerSelector: '.game-action-btn, .pause-modal__toggle',
 })
 </script>
 
@@ -55,14 +55,38 @@ useGsapModal(toRef(props, 'show'), overlayRef, panelRef, {
         </header>
 
         <div class="pause-modal__actions">
-          <button v-gsap-press type="button" class="pause-modal__btn" aria-label="Продолжить" @click="emit('resume')">
-            <img :src="continueBtn" alt="Продолжить" />
+          <button
+            v-gsap-press
+            type="button"
+            class="game-action-btn game-action-btn--green"
+            @click="emit('resume')"
+          >
+            <span class="game-action-btn__icon" aria-hidden="true">
+              <IconPaw />
+            </span>
+            <span class="game-action-btn__label">Продолжить</span>
           </button>
-          <button v-gsap-press type="button" class="pause-modal__btn" aria-label="Рестарт" @click="emit('restart')">
-            <img :src="restartBtn" alt="Рестарт" />
+          <button
+            v-gsap-press
+            type="button"
+            class="game-action-btn game-action-btn--blue"
+            @click="emit('restart')"
+          >
+            <span class="game-action-btn__icon" aria-hidden="true">
+              <IconRestart />
+            </span>
+            <span class="game-action-btn__label">Рестарт</span>
           </button>
-          <button v-gsap-press type="button" class="pause-modal__btn" aria-label="Главное меню" @click="emit('menu')">
-            <img :src="menuBtn" alt="Главное меню" />
+          <button
+            v-gsap-press
+            type="button"
+            class="game-action-btn game-action-btn--orange"
+            @click="emit('menu')"
+          >
+            <span class="game-action-btn__icon" aria-hidden="true">
+              <IconHome />
+            </span>
+            <span class="game-action-btn__label">Главное меню</span>
           </button>
         </div>
 
@@ -170,31 +194,8 @@ useGsapModal(toRef(props, 'show'), overlayRef, panelRef, {
 .pause-modal__actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 14px;
-}
-
-.pause-modal__btn {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: filter 0.12s ease;
-}
-
-.pause-modal__btn:hover {
-  filter: brightness(1.04);
-}
-
-.pause-modal__btn img {
-  display: block;
-  width: 100%;
-  height: 49px;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 3px 6px rgba(40, 24, 10, 0.28));
 }
 
 .pause-modal__toggles {

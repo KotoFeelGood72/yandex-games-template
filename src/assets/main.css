@@ -6,9 +6,14 @@
 @import '@fontsource/rubik/cyrillic-600.css';
 @import '@fontsource/rubik/cyrillic-700.css';
 @import '@fontsource/rubik/cyrillic-800.css';
+@import '@fontsource/nunito/latin-800.css';
+@import '@fontsource/nunito/latin-900.css';
+@import '@fontsource/nunito/cyrillic-800.css';
+@import '@fontsource/nunito/cyrillic-900.css';
 
 :root {
   --font-game: 'Rubik', system-ui, sans-serif;
+  --font-play: 'Nunito', 'Rubik', system-ui, sans-serif;
 }
 
 #app {

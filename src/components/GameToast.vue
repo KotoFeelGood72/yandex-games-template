@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
+import { isHubState } from '@/game/types/game.types'
 import { animateToastIn, animateToastOut } from '@/shared/animations/gsapPresets'
 import { useGameStore } from '@/stores/game'
 
 const store = useGameStore()
+const isHub = computed(() => isHubState(store.gameState))
 const toastRef = ref<HTMLElement | null>(null)
 const visible = ref(false)
 let hideTimer: number | null = null
@@ -36,7 +38,7 @@ watch(
 
 <template>
   <Teleport to="body">
-    <div v-if="visible" ref="toastRef" class="game-toast">
+    <div v-if="visible" ref="toastRef" class="game-toast" :class="{ 'game-toast--hub': isHub }">
       {{ store.toastMessage }}
     </div>
   </Teleport>

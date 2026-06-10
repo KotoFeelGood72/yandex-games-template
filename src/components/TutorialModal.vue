@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, toRef, watch } from 'vue'
 
-import okeyBtn from '@/assets/ui/buttons/okey.png'
+import continueBtn from '@/assets/ui/buttons/continiue.webp'
+import okeyBtn from '@/assets/ui/buttons/okey.webp'
 import { useGsapModal } from '@/composables/useGsapModal'
 import { animateContentSwap } from '@/shared/animations/gsapPresets'
 import { useGameStore } from '@/stores/game'
@@ -64,10 +65,11 @@ function next(): void {
             v-if="step < steps.length - 1"
             v-gsap-press
             type="button"
-            class="game-btn game-btn--green"
+            class="game-modal__btn"
+            aria-label="Далее"
             @click="next"
           >
-            Далее
+            <img :src="continueBtn" alt="Далее" />
           </button>
           <button v-else v-gsap-press type="button" class="game-modal__btn" aria-label="Понятно" @click="next">
             <img :src="okeyBtn" alt="Понятно" />

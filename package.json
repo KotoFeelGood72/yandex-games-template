@@ -13,6 +13,7 @@
     "record:gameplay": "node scripts/record-gameplay.mjs"
   },
   "dependencies": {
+    "@fontsource/nunito": "^5.2.7",
     "@fontsource/rubik": "^5.2.8",
     "@iconify-json/mdi": "^1.2.3",
     "gsap": "^3.15.0",

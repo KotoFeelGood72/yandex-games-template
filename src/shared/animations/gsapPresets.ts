@@ -107,49 +107,6 @@ export function animateToastOut(el: HTMLElement): Promise<void> {
   })
 }
 
-export function animateNavActive(el: HTMLElement): gsap.core.Tween {
-  return gsap.fromTo(
-    el,
-    { scale: 1 },
-    { scale: 1.08, duration: 0.24, ease: 'back.out(2.5)', yoyo: true, repeat: 1 },
-  )
-}
-
-export function applyHubNavActiveState(
-  items: HTMLElement[],
-  glows: HTMLElement[],
-  activeIndex: number,
-): void {
-  items.forEach((item, index) => {
-    const isActive = index === activeIndex
-    const icon = item.querySelector<HTMLElement>('.hub-nav__icon')
-    const glow = glows[index]
-    if (!icon) return
-
-    gsap.to(icon, {
-      scale: isActive ? 1.08 : 0.94,
-      y: isActive ? -5 : 0,
-      opacity: isActive ? 1 : 0.72,
-      duration: 0.34,
-      ease: isActive ? 'back.out(1.8)' : 'power2.out',
-      overwrite: 'auto',
-    })
-
-    if (glow) {
-      gsap.to(glow, {
-        opacity: isActive ? 1 : 0,
-        scale: isActive ? 1 : 0.72,
-        duration: 0.28,
-        ease: 'power2.out',
-        overwrite: 'auto',
-      })
-    }
-  })
-
-  const activeIcon = items[activeIndex]?.querySelector<HTMLElement>('.hub-nav__icon')
-  if (activeIcon) animateNavActive(activeIcon)
-}
-
 export function animateComboCallout(root: HTMLElement): gsap.core.Timeline {
   const chars = root.querySelectorAll<HTMLElement>('.combo-callout__char')
   const glow = root.querySelector<HTMLElement>('.combo-callout__glow')
@@ -295,15 +252,13 @@ export interface LoadingScreenTargets {
 
 export function animateLoadingScreenEnter(targets: LoadingScreenTargets): gsap.core.Timeline {
   const { root, logo, cats, label, bar } = targets
-  const catItems = cats?.querySelectorAll<HTMLElement>('.loading-screen__cat-slot') ?? []
-  const paws = root.querySelectorAll<HTMLElement>('.loading-screen__paw')
+  const catItems = cats?.querySelectorAll<HTMLElement>('.loading-screen__cat-preview') ?? []
 
   gsap.set(root, { opacity: 0 })
   if (logo) gsap.set(logo, { opacity: 0, scale: 0.82, y: -18 })
   gsap.set(catItems, { opacity: 0, scale: 0.35, y: 28 })
   if (label) gsap.set(label, { opacity: 0, y: 12 })
-  if (bar) gsap.set(bar, { scaleX: 0, transformOrigin: 'left center' })
-  gsap.set(paws, { opacity: 0, scale: 0.5, y: 6 })
+  if (bar) gsap.set(bar, { width: '0%' })
 
   const tl = gsap.timeline()
 
@@ -329,22 +284,7 @@ export function animateLoadingScreenEnter(targets: LoadingScreenTargets): gsap.c
   }
 
   if (bar) {
-    tl.to(bar, { scaleX: 0.08, duration: 0.35, ease: 'power2.out' }, 0.22)
-  }
-
-  if (paws.length) {
-    tl.to(
-      paws,
-      {
-        opacity: 0.85,
-        scale: 1,
-        y: 0,
-        duration: 0.24,
-        stagger: 0.05,
-        ease: 'back.out(1.8)',
-      },
-      0.28,
-    )
+    tl.to(bar, { width: '8%', duration: 0.35, ease: 'power2.out' }, 0.22)
   }
 
   if (label) {
@@ -355,8 +295,7 @@ export function animateLoadingScreenEnter(targets: LoadingScreenTargets): gsap.c
 }
 
 export function animateLoadingScreenIdle(cats: HTMLElement, dots: HTMLElement): void {
-  const catItems = cats.querySelectorAll<HTMLElement>('.loading-screen__cat-slot')
-  const paws = cats.closest('.loading-screen')?.querySelectorAll<HTMLElement>('.loading-screen__paw') ?? []
+  const catItems = cats.querySelectorAll<HTMLElement>('.loading-screen__cat-preview')
 
   catItems.forEach((item, index) => {
     gsap.to(item, {
@@ -377,30 +316,62 @@ export function animateLoadingScreenIdle(cats: HTMLElement, dots: HTMLElement): 
     repeat: -1,
   })
 
-  paws.forEach((paw, index) => {
-    gsap.to(paw, {
-      y: -4,
-      scale: 1.08,
-      duration: 0.42,
-      delay: index * 0.07,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
+}
+
+export const LOADING_FLOATING_PAW_COUNT = 14
+
+function playFloatingPaw(paw: HTMLElement, initialDelay = 0): void {
+  const x = 4 + Math.random() * 92
+  const y = 4 + Math.random() * 92
+  const rotation = -40 + Math.random() * 80
+  const peakScale = 0.85 + Math.random() * 0.55
+
+  gsap.set(paw, {
+    left: `${x}%`,
+    top: `${y}%`,
+    xPercent: -50,
+    yPercent: -50,
+    rotation,
+    scale: 0,
+    opacity: 0,
+  })
+
+  gsap
+    .timeline({ delay: initialDelay })
+    .to(paw, {
+      opacity: 0.45 + Math.random() * 0.45,
+      scale: peakScale,
+      duration: 0.3 + Math.random() * 0.25,
+      ease: 'back.out(2)',
     })
+    .to(paw, {
+      opacity: 0,
+      scale: peakScale * 0.45,
+      duration: 0.35 + Math.random() * 0.35,
+      ease: 'power2.in',
+    })
+    .call(() => {
+      playFloatingPaw(paw, 0.1 + Math.random() * 1.4)
+    })
+}
+
+export function animateLoadingScreenFloatingPaws(layer: HTMLElement): void {
+  const paws = layer.querySelectorAll<HTMLElement>('.loading-screen__float-paw')
+  paws.forEach((paw, index) => {
+    playFloatingPaw(paw, index * 0.22)
   })
 }
 
 export function setLoadingProgress(bar: HTMLElement, value: number): gsap.core.Tween {
-  const current = gsap.getProperty(bar, 'scaleX') as number
-  const next = Math.max(0.08, Math.min(1, value))
-  const delta = Math.abs(next - (Number.isFinite(current) ? current : 0))
+  const current = parseFloat(String(gsap.getProperty(bar, 'width') ?? '0'))
+  const next = Math.max(8, Math.min(100, value * 100))
+  const delta = Math.abs(next - (Number.isFinite(current) ? current : 0)) / 100
 
   return gsap.to(bar, {
-    scaleX: next,
+    width: `${next}%`,
     duration: Math.max(0.25, Math.min(0.9, delta * 1.4)),
     ease: 'power2.out',
     overwrite: 'auto',
-    transformOrigin: 'left center',
   })
 }
 

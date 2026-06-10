@@ -6,6 +6,7 @@ import IconMusicOff from '~icons/mdi/music-off'
 import IconVolumeHigh from '~icons/mdi/volume-high'
 import IconVolumeOff from '~icons/mdi/volume-off'
 
+import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useGsapModal } from '@/composables/useGsapModal'
 import { usePlayerStore } from '@/stores/playerStore'
 import { useSettingsStore } from '@/stores/settingsStore'
@@ -19,16 +20,25 @@ const emit = defineEmits<{ close: [] }>()
 
 const overlayRef = ref<HTMLElement | null>(null)
 const panelRef = ref<HTMLElement | null>(null)
+const showResetConfirm = ref(false)
 
 useGsapModal(toRef(props, 'show'), overlayRef, panelRef, {
   staggerSelector: '.settings-modal__toggle, .settings-modal__reset',
 })
 
-function resetAll(): void {
-  if (!confirm('Сбросить весь прогресс? Это действие нельзя отменить.')) return
+function requestReset(): void {
+  showResetConfirm.value = true
+}
+
+function confirmReset(): void {
+  showResetConfirm.value = false
   settings.resetProgress()
   player.loadProgress()
   emit('close')
+}
+
+function cancelReset(): void {
+  showResetConfirm.value = false
 }
 </script>
 
@@ -87,12 +97,22 @@ function resetAll(): void {
         </div>
 
         <div class="settings-modal__actions">
-          <button v-gsap-press type="button" class="settings-modal__reset" @click="resetAll">
+          <button v-gsap-press type="button" class="settings-modal__reset" @click="requestReset">
             Сбросить прогресс
           </button>
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      :show="showResetConfirm"
+      message="Сбросить весь прогресс? Это действие нельзя отменить."
+      confirm-label="Сбросить"
+      cancel-label="Отмена"
+      danger
+      @confirm="confirmReset"
+      @cancel="cancelReset"
+    />
   </Teleport>
 </template>
 

@@ -2,15 +2,20 @@
 import gsap from 'gsap'
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
+import circleFrame from '@/assets/game/circle.webp'
 import logoUrl from '@/assets/brand/logo.webp'
 import cat1 from '@/assets/game/cats/1.webp'
 import cat5 from '@/assets/game/cats/5.webp'
 import cat9 from '@/assets/game/cats/9.webp'
-import cat13 from '@/assets/game/cats/13.webp'
+import cat20 from '@/assets/game/cats/20.webp'
+import IconPaw from '~icons/mdi/paw'
+
 import {
   animateLoadingScreenEnter,
+  animateLoadingScreenFloatingPaws,
   animateLoadingScreenIdle,
   animateLoadingScreenOut,
+  LOADING_FLOATING_PAW_COUNT,
   setLoadingProgress,
 } from '@/shared/animations/gsapPresets'
 
@@ -18,7 +23,7 @@ const LOADING_CATS = [
   { src: cat1, alt: '' },
   { src: cat5, alt: '' },
   { src: cat9, alt: '' },
-  { src: cat13, alt: '' },
+  { src: cat20, alt: '' },
 ] as const
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -27,6 +32,7 @@ const catsRef = ref<HTMLElement | null>(null)
 const barRef = ref<HTMLElement | null>(null)
 const labelRef = ref<HTMLElement | null>(null)
 const dotsRef = ref<HTMLElement | null>(null)
+const pawsLayerRef = ref<HTMLElement | null>(null)
 
 let idleCtx: gsap.Context | null = null
 let progressTween: gsap.core.Tween | null = null
@@ -82,6 +88,10 @@ onMounted(async () => {
     if (catsRef.value && dotsRef.value) {
       animateLoadingScreenIdle(catsRef.value, dotsRef.value)
     }
+
+    if (pawsLayerRef.value) {
+      animateLoadingScreenFloatingPaws(pawsLayerRef.value)
+    }
   }, rootRef.value)
 
   isReady = true
@@ -103,6 +113,15 @@ defineExpose({ setProgress, finish, waitUntilReady })
 <template>
   <div ref="rootRef" class="loading-screen scene-bg" role="status" aria-live="polite" aria-busy="true">
     <div class="loading-screen__veil" aria-hidden="true" />
+    <div ref="pawsLayerRef" class="loading-screen__paws-layer" aria-hidden="true">
+      <span
+        v-for="n in LOADING_FLOATING_PAW_COUNT"
+        :key="n"
+        class="loading-screen__float-paw"
+      >
+        <IconPaw />
+      </span>
+    </div>
 
     <div class="loading-screen__content">
       <img
@@ -118,18 +137,16 @@ defineExpose({ setProgress, finish, waitUntilReady })
         <div
           v-for="(cat, index) in LOADING_CATS"
           :key="index"
-          class="loading-screen__cat-slot"
+          class="cat-preview loading-screen__cat-preview"
         >
-          <img class="loading-screen__cat" :src="cat.src" :alt="cat.alt" />
+          <img class="cat-preview__circle" :src="circleFrame" alt="" aria-hidden="true" />
+          <img class="cat-preview__sprite" :src="cat.src" :alt="cat.alt" />
         </div>
       </div>
 
       <div class="loading-screen__progress" aria-hidden="true">
         <div class="loading-screen__progress-track">
           <div ref="barRef" class="loading-screen__progress-fill" />
-        </div>
-        <div class="loading-screen__paws">
-          <span v-for="n in 5" :key="n" class="loading-screen__paw">🐾</span>
         </div>
       </div>
 
@@ -157,7 +174,37 @@ defineExpose({ setProgress, finish, waitUntilReady })
   background:
     radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.22) 0%, transparent 42%),
     linear-gradient(180deg, rgba(142, 200, 240, 0.35) 0%, rgba(106, 158, 200, 0.55) 100%);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   pointer-events: none;
+}
+
+.loading-screen__paws-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.loading-screen__float-paw {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(36px, 9vw, 58px);
+  height: clamp(36px, 9vw, 58px);
+  color: #fff;
+  transform-origin: center center;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.28));
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.loading-screen__float-paw :deep(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .loading-screen__content {
@@ -187,26 +234,9 @@ defineExpose({ setProgress, finish, waitUntilReady })
   min-height: clamp(72px, 16vw, 96px);
 }
 
-.loading-screen__cat-slot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.loading-screen__cat-preview {
   width: clamp(56px, 16vw, 72px);
   height: clamp(56px, 16vw, 72px);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 28%, #fff9ef 0%, #f5e6c8 55%, #e8cc9b 100%);
-  border: 3px solid #c49a6c;
-  box-shadow:
-    0 4px 0 rgba(74, 48, 24, 0.35),
-    inset 0 2px 6px rgba(255, 255, 255, 0.45);
-}
-
-.loading-screen__cat {
-  display: block;
-  width: 78%;
-  height: 78%;
-  object-fit: contain;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.18));
 }
 
 .loading-screen__progress {
@@ -214,38 +244,51 @@ defineExpose({ setProgress, finish, waitUntilReady })
 }
 
 .loading-screen__progress-track {
-  height: 14px;
-  border-radius: 999px;
+  height: 18px;
   padding: 2px;
-  background: rgba(255, 249, 239, 0.55);
-  border: 2px solid rgba(196, 154, 108, 0.85);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12);
+  border-radius: 9px;
+  background: linear-gradient(180deg, #2b2b2b 0%, #161616 52%, #0c0c0c 100%);
+  border: 1px solid #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.65);
   overflow: hidden;
 }
 
 .loading-screen__progress-fill {
-  width: 100%;
+  width: 0;
   height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(180deg, #ffb35a 0%, #e89540 45%, #c46828 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transform: scaleX(0);
-  transform-origin: left center;
-  will-change: transform;
+  min-width: 0;
+  border-radius: 7px;
+  background-color: #e89528;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 48%, rgba(0, 0, 0, 0.1) 100%),
+    repeating-linear-gradient(
+      -45deg,
+      #ffd060 0,
+      #ffd060 6px,
+      #f0a028 6px,
+      #f0a028 12px
+    );
+  background-size:
+    100% 100%,
+    16.97px 16.97px;
+  animation: loading-bar-stripes 0.55s linear infinite;
+  will-change: width, background-position;
 }
 
-.loading-screen__paws {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  padding: 0 4px;
-  font-size: 14px;
-  opacity: 0.72;
-}
+@keyframes loading-bar-stripes {
+  from {
+    background-position:
+      0 0,
+      0 0;
+  }
 
-.loading-screen__paw {
-  display: inline-block;
-  transform-origin: center bottom;
+  to {
+    background-position:
+      0 0,
+      16.97px 0;
+  }
 }
 
 .loading-screen__label {

@@ -3,8 +3,7 @@ import { ref } from 'vue'
 
 import HubLayout from '@/components/hub/HubLayout.vue'
 import logoUrl from '@/assets/brand/logo.webp'
-import gameStartIcon from '@/assets/ui/buttons/gamestart.png'
-import catsIllustration from '@/assets/ui/illustrations/cats.png'
+import catsIllustration from '@/assets/ui/illustrations/cats.webp'
 import { showInterstitialThen } from '@/ads/ads'
 import { useGsapIdleFloat, useGsapPopEnter } from '@/composables/useGsapEnter'
 import { useGameStore } from '@/stores/game'
@@ -46,24 +45,19 @@ function onPlay(): void {
         <img class="home__logo-img" :src="logoUrl" alt="Кот Слияние" />
       </h1>
 
-      <button
-        ref="playRef"
-        v-gsap-press="0.97"
-        type="button"
-        class="home__play"
-        aria-label="Играть"
-        @click="onPlay"
-      >
-        <img class="home__play-img" :src="gameStartIcon" alt="Играть" />
-      </button>
+      <div class="home__play-wrap">
+        <button
+          ref="playRef"
+          v-gsap-press="0.97"
+          type="button"
+          class="game-play-btn home__play"
+          @click="onPlay"
+        >
+          <span class="game-play-btn__label">Играть</span>
+        </button>
+      </div>
 
-      <img
-        ref="catsRef"
-        class="home__cats"
-        :src="catsIllustration"
-        alt=""
-        aria-hidden="true"
-      />
+      <img ref="catsRef" class="home__cats" :src="catsIllustration" alt="" aria-hidden="true" />
     </div>
   </HubLayout>
 </template>
@@ -74,11 +68,9 @@ function onPlay(): void {
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: clamp(10px, 2.5vh, 30px);
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 8px 0 0;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -86,7 +78,18 @@ function onPlay(): void {
 .home__logo {
   margin: 0;
   flex-shrink: 0;
+  width: 100%;
   text-align: center;
+}
+
+.home__play-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  padding: clamp(10px, 2vh, 18px) 0 clamp(6px, 1.5vh, 12px);
 }
 
 .home__logo-img {
@@ -100,37 +103,24 @@ function onPlay(): void {
 }
 
 .home__play {
-  display: block;
-  width: 100%;
-  max-width: 300px;
   margin: 0;
   flex-shrink: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: filter 0.15s ease;
+  width: min(100%, 340px);
+  max-width: 340px;
+  min-height: 72px;
+  padding: 12px 36px 14px;
 }
 
-.home__play:hover {
-  filter: brightness(1.06);
-}
-
-.home__play-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.35));
-  pointer-events: none;
+.home__play .game-play-btn__label {
+  font-size: clamp(30px, 7.5vw, 38px);
 }
 
 .home__cats {
   display: block;
-  flex: 1 1 0;
+  flex: 0 1 auto;
   width: min(100%, 340px);
   min-height: 0;
-  max-height: 100%;
+  max-height: min(48vh, 320px);
   height: auto;
   object-fit: contain;
   object-position: bottom center;

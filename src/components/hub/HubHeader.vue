@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import coinIcon from '@/assets/ui/hud/coin.png'
-import happyIcon from '@/assets/ui/hud/happy.png'
-import plusIcon from '@/assets/ui/hud/plus.png'
-import settingsIcon from '@/assets/ui/hud/settings.png'
+import coinIcon from '@/assets/ui/hud/coin.webp'
+import happyIcon from '@/assets/ui/hud/happy.webp'
+import plusIcon from '@/assets/ui/hud/plus.webp'
+import settingsIcon from '@/assets/ui/hud/settings.webp'
 import { useGameStore } from '@/stores/game'
 import { usePlayerStore } from '@/stores/playerStore'
 

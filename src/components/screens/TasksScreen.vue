@@ -3,8 +3,8 @@ import { ref } from 'vue'
 
 import CustomScroll from '@/components/CustomScroll.vue'
 import HubLayout from '@/components/hub/HubLayout.vue'
-import coinIcon from '@/assets/ui/hud/coin.png'
-import payBtn from '@/assets/ui/buttons/pay.png'
+import coinIcon from '@/assets/ui/hud/coin.webp'
+import payBtn from '@/assets/ui/buttons/pay.webp'
 import task1Icon from '@/assets/ui/tasks/task-1.png'
 import task2Icon from '@/assets/ui/tasks/task-2.png'
 import task3Icon from '@/assets/ui/tasks/task-3.png'
@@ -76,7 +76,7 @@ function onQuestCardClick(quest: (typeof dailyQuests)[number]): void {
                 <span class="quest-card__reward-caption">Награда:</span>
                 <span v-if="player.isQuestClaimed(quest.id)" class="quest-card__reward quest-card__reward--claimed">
                   <img class="quest-card__reward-bg" :src="payBtn" alt="" aria-hidden="true" />
-                  <span class="quest-card__reward-label">✓ Получено</span>
+                  <span class="quest-card__reward-label">Получено</span>
                 </span>
                 <span v-else-if="quest.reward.coins" class="quest-card__reward">
                   <img class="quest-card__reward-bg" :src="payBtn" alt="" aria-hidden="true" />

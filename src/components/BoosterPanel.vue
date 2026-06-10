@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import boosterBomb from '@/assets/ui/boosters/booster-1.png'
-import boosterRainbow from '@/assets/ui/boosters/booster-2.png'
-import boosterCookie from '@/assets/ui/boosters/booster-3.png'
+import boosterBomb from '@/assets/ui/boosters/booster-1.webp'
+import boosterRainbow from '@/assets/ui/boosters/booster-2.webp'
+import boosterCookie from '@/assets/ui/boosters/booster-3.webp'
 import type { BoosterType } from '@/game/types/booster.types'
 import { useGsapSlideEnter, useGsapStaggerEnter } from '@/composables/useGsapEnter'
 import { useGameStore } from '@/stores/game'
@@ -12,10 +12,10 @@ import { usePlayerStore } from '@/stores/playerStore'
 const store = useGameStore()
 const player = usePlayerStore()
 
-const boosters: { type: BoosterType; icon: string; label: string }[] = [
-  { type: 'bomb', icon: boosterBomb, label: 'Бомба' },
-  { type: 'rainbow', icon: boosterRainbow, label: 'Клубок' },
-  { type: 'cookie', icon: boosterCookie, label: 'Печенье' },
+const boosters: { type: BoosterType; icon: string; label: string; hint: string }[] = [
+  { type: 'bomb', icon: boosterBomb, label: 'Бомба', hint: 'Удаляет объект' },
+  { type: 'rainbow', icon: boosterRainbow, label: 'Клубок', hint: 'Сливает пару' },
+  { type: 'cookie', icon: boosterCookie, label: 'Печенье', hint: '−1 уровень' },
 ]
 
 const barRef = ref<HTMLElement | null>(null)
@@ -42,13 +42,16 @@ function activate(type: BoosterType): void {
         class="booster-slot"
         :class="{ 'booster-slot--active': store.boosterMode === b.type }"
         :disabled="player.progress.boosters[b.type] <= 0"
-        :aria-label="`${b.label}: ${player.progress.boosters[b.type]} шт.`"
+        :aria-label="`${b.label}: ${b.hint}. ${player.progress.boosters[b.type]} шт.`"
         @click="activate(b.type)"
       >
         <span class="booster-slot__icon-wrap">
           <img class="booster-slot__icon" :src="b.icon" alt="" aria-hidden="true" />
+          <span v-if="player.progress.boosters[b.type] > 0" class="booster-slot__count">
+            {{ player.progress.boosters[b.type] }}
+          </span>
         </span>
-        <span class="booster-slot__count">{{ player.progress.boosters[b.type] }}</span>
+        <span class="booster-slot__hint">{{ b.hint }}</span>
       </button>
     </div>
   </div>
@@ -67,10 +70,11 @@ function activate(type: BoosterType): void {
   flex: 1 1 0;
   min-width: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 54px;
-  padding: 0;
+  gap: 4px;
+  padding: 6px 4px 5px;
   border: 2px solid #c49a6c;
   border-radius: 12px;
   background: linear-gradient(180deg, #fff6e8 0%, #edd5a8 100%);
@@ -100,11 +104,13 @@ function activate(type: BoosterType): void {
 }
 
 .booster-slot__icon-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 28%, #fffdf8 0%, #f3e2bf 58%, #e6cf9a 100%);
   box-shadow:
@@ -114,18 +120,29 @@ function activate(type: BoosterType): void {
 }
 
 .booster-slot__icon {
-  width: 34px;
-  height: 34px;
+  width: 46px;
+  height: 46px;
   object-fit: contain;
   display: block;
   pointer-events: none;
   filter: drop-shadow(0 2px 3px rgba(40, 24, 10, 0.22));
 }
 
+.booster-slot__hint {
+  font-family: var(--font-game);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  color: #6b4a2a;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
 .booster-slot__count {
   position: absolute;
-  right: -4px;
-  bottom: -4px;
+  right: -2px;
+  bottom: -2px;
   z-index: 1;
   min-width: 20px;
   height: 20px;
@@ -149,17 +166,22 @@ function activate(type: BoosterType): void {
 
 @media (max-height: 740px) {
   .booster-slot {
-    height: 48px;
+    gap: 3px;
+    padding: 5px 3px 4px;
   }
 
   .booster-slot__icon-wrap {
-    width: 36px;
-    height: 36px;
+    width: 46px;
+    height: 46px;
   }
 
   .booster-slot__icon {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .booster-slot__hint {
+    font-size: 8px;
   }
 
   .booster-slot__count {

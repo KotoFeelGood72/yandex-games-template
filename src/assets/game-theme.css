@@ -60,8 +60,12 @@
   --app-content-padding-x: 14px;
   --app-content-padding-top: 12px;
   --app-content-padding-bottom: 20px;
-  --nav-icon-width: clamp(56px, 18vw, 75px);
-  --nav-icon-height: clamp(68px, 22vw, 95px);
+  /* Нижняя навигация: квадратные кнопки (4 шт. в ряд на ~360px) */
+  --nav-icon-size: clamp(68px, 21vw, 84px);
+  --nav-icon-width: var(--nav-icon-size);
+  --nav-icon-height: var(--nav-icon-size);
+  --hub-nav-total-height: calc(8px + var(--nav-icon-size) + max(6px, var(--app-safe-bottom)));
+  --game-toast-gap: 22px;
 }
 
 /* Фон сцены — на весь экран, без phone frame */
@@ -85,6 +89,7 @@
 
   :root {
     --game-column-width: 480px;
+    --nav-icon-size: 100px;
   }
 }
 
@@ -385,10 +390,11 @@
 .cat-preview__sprite {
   position: absolute;
   left: 50%;
-  bottom: -4%;
+  bottom: -14%;
   z-index: 1;
   transform: translateX(-50%);
-  width: 100%;
+  width: 120%;
+  max-width: none;
   height: auto;
   object-fit: contain;
   object-position: bottom center;
@@ -550,6 +556,252 @@
   min-height: 38px;
   padding: 0 14px;
   font-size: 13px;
+}
+
+/* Главная кнопка «Играть» — глянцевая зелёная таблетка */
+.game-play-btn {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  min-height: 68px;
+  padding: 11px 32px 13px;
+  border: 3px solid #1f8f18;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c8ff5e 0%, #8ef03c 16%, #55dc28 48%, #2fb81a 78%, #249614 100%);
+  box-shadow:
+    0 5px 0 #1a6f12,
+    0 9px 18px rgba(18, 96, 18, 0.42),
+    inset 0 2px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -5px 10px rgba(12, 96, 8, 0.28);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.game-play-btn::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 10%;
+  width: 58%;
+  height: 46%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 42% 38%,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.35) 38%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+.game-play-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, transparent 42%);
+  pointer-events: none;
+}
+
+.game-play-btn:hover {
+  filter: brightness(1.04);
+}
+
+.game-play-btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 #1a6f12,
+    0 5px 12px rgba(18, 96, 18, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -3px 8px rgba(12, 96, 8, 0.22);
+}
+
+.game-play-btn__label {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-family: var(--font-play);
+  font-size: clamp(28px, 7.2vw, 36px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 1px 0 #2a8f1c,
+    0 2px 0 #1f7514,
+    0 4px 0 #145a0e,
+    0 6px 10px rgba(8, 56, 8, 0.45);
+  pointer-events: none;
+}
+
+/* Глянцевые кнопки действий (пауза и др.) */
+.game-action-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  padding: 11px 20px 11px 46px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    filter 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
+}
+
+.game-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 12%;
+  width: 55%;
+  height: 44%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 42% 38%,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.28) 42%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+.game-action-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.game-action-btn:hover {
+  filter: brightness(1.04);
+}
+
+.game-action-btn__icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  transform: translateY(calc(-50% + 1px));
+  color: #fff;
+  font-size: 24px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28));
+  pointer-events: none;
+}
+
+.game-action-btn__icon svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+.game-action-btn__label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  min-height: 1em;
+  font-family: var(--font-play);
+  font-size: clamp(14px, 3.8vw, 17px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #fff;
+  transform: translateY(2px);
+  pointer-events: none;
+}
+
+.game-action-btn--green {
+  background: linear-gradient(180deg, #c4ff58 0%, #8ef03c 22%, #55dc28 54%, #2fb81a 100%);
+  box-shadow:
+    0 4px 0 #1a6f12,
+    0 6px 14px rgba(18, 96, 18, 0.38),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 8px rgba(12, 96, 8, 0.24);
+}
+
+.game-action-btn--green .game-action-btn__label {
+  text-shadow:
+    0 1px 0 #2a8f1c,
+    0 2px 0 #1f7514,
+    0 3px 6px rgba(8, 56, 8, 0.4);
+}
+
+.game-action-btn--green:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #1a6f12,
+    0 4px 10px rgba(18, 96, 18, 0.32),
+    inset 0 2px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -2px 6px rgba(12, 96, 8, 0.2);
+}
+
+.game-action-btn--blue {
+  background: linear-gradient(180deg, #9edcff 0%, #6ec4ff 24%, #4aa8f5 54%, #2a88d8 100%);
+  box-shadow:
+    0 4px 0 #1a5a9e,
+    0 6px 14px rgba(26, 90, 158, 0.38),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 8px rgba(16, 72, 140, 0.24);
+}
+
+.game-action-btn--blue .game-action-btn__label {
+  text-shadow:
+    0 1px 0 #2a6fb8,
+    0 2px 0 #1f5a9a,
+    0 3px 6px rgba(8, 40, 88, 0.4);
+}
+
+.game-action-btn--blue:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #1a5a9e,
+    0 4px 10px rgba(26, 90, 158, 0.32),
+    inset 0 2px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -2px 6px rgba(16, 72, 140, 0.2);
+}
+
+.game-action-btn--orange {
+  background: linear-gradient(180deg, #ffc878 0%, #ffaa44 26%, #f08828 56%, #d06818 100%);
+  box-shadow:
+    0 4px 0 #9a4810,
+    0 6px 14px rgba(154, 72, 16, 0.38),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -4px 8px rgba(120, 56, 8, 0.24);
+}
+
+.game-action-btn--orange .game-action-btn__label {
+  text-shadow:
+    0 1px 0 #b85a14,
+    0 2px 0 #9a4810,
+    0 3px 6px rgba(72, 32, 4, 0.4);
+}
+
+.game-action-btn--orange:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #9a4810,
+    0 4px 10px rgba(154, 72, 16, 0.32),
+    inset 0 2px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -2px 6px rgba(120, 56, 8, 0.2);
 }
 
 /* Монеты */
@@ -912,36 +1164,42 @@
   color: #fff;
 }
 
-/* Тост — деревянная табличка в стиле хаба */
+/* Тост награды — яркая плашка над нижним меню (в хабе) или у низа экрана (в игре) */
 .game-toast {
   position: fixed;
-  bottom: calc(80px + var(--app-safe-bottom));
   left: 50%;
-  max-width: min(calc(100vw - 32px), 360px);
-  transform: translateX(-50%);
+  bottom: calc(20px + var(--app-safe-bottom));
   z-index: 2000;
-  padding: 12px 22px;
-  border-radius: 18px;
+  box-sizing: border-box;
+  width: min(
+    calc(100vw - 2 * max(var(--app-content-padding-x), var(--app-safe-left))),
+    calc(var(--game-column-width) - 2 * var(--app-content-padding-x))
+  );
+  max-width: min(
+    calc(100vw - 2 * max(var(--app-content-padding-x), var(--app-safe-left))),
+    calc(var(--game-column-width) - 2 * var(--app-content-padding-x))
+  );
+  padding: 14px 16px;
+  border-radius: 14px;
   font-family: var(--font-game);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   line-height: 1.35;
   text-align: center;
-  letter-spacing: 0.01em;
-  color: var(--hub-text);
-  background: var(--hub-panel-bg);
-  border: 3px solid var(--hub-panel-border);
+  letter-spacing: 0.02em;
+  color: #4a2400;
+  background: linear-gradient(180deg, #fff6b0 0%, #ffd84a 42%, #ffb800 100%);
+  border: 3px solid #f59a00;
   box-shadow:
-    0 6px 20px rgba(40, 24, 10, 0.28),
-    inset 0 2px 6px rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+    0 6px 24px rgba(255, 168, 0, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
   pointer-events: none;
+  overflow: visible;
 }
 
-@media (min-width: 768px) {
-  .game-toast {
-    bottom: calc(24px + var(--app-safe-bottom));
-  }
+.game-toast--hub {
+  bottom: calc(var(--hub-nav-total-height) + var(--game-toast-gap));
 }
 
 /* ——— Адаптив: узкие и низкие экраны ——— */

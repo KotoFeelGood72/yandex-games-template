@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, toRef } from 'vue'
 
-import continueBtn from '@/assets/ui/buttons/continiue.png'
-import menuBtn from '@/assets/ui/buttons/menu.png'
-import coinIcon from '@/assets/ui/hud/coin.png'
+import continueBtn from '@/assets/ui/buttons/continiue.webp'
+import menuBtn from '@/assets/ui/buttons/menu.webp'
+import coinIcon from '@/assets/ui/hud/coin.webp'
 import { useGsapModal } from '@/composables/useGsapModal'
 import { useGameStore } from '@/stores/game'
 
