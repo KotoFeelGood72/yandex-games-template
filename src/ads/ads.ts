@@ -3,7 +3,13 @@
 // non-Vue code (this module) doesn't need to import the game/store.
 
 import { ref, readonly } from 'vue'
-import { getServerTime, getSessionStartMs, getYsdk } from '@/yandex/sdk'
+import {
+  getServerTime,
+  getSessionStartMs,
+  getYsdk,
+  type YsdkFullscreenCallbacks,
+  type YsdkRewardedCallbacks,
+} from '@/yandex/sdk'
 
 const FIRST_AD_GAP = 60_000 // no interstitial in first minute (Yandex requirement)
 const INTERSTITIAL_MIN_GAP = 90_000 // our cooldown — 30s stricter than SDK
@@ -37,13 +43,33 @@ function overlaySafeFromAds(): boolean {
   return !adPlaying.value && !adBreakBlocking
 }
 
+let adWatchdogId: ReturnType<typeof setTimeout> | null = null
+
+function clearAdWatchdog(): void {
+  if (adWatchdogId !== null) {
+    window.clearTimeout(adWatchdogId)
+    adWatchdogId = null
+  }
+}
+
 function emitPause() {
   adPlaying.value = true
   window.dispatchEvent(new CustomEvent('ads:pause'))
 }
 function emitResume() {
   adPlaying.value = false
+  clearAdWatchdog()
   window.dispatchEvent(new CustomEvent('ads:resume'))
+}
+
+/** Если SDK не вызвал onClose/onError — не блокировать игру навсегда. */
+function armAdWatchdog(onTimeout: () => void): void {
+  clearAdWatchdog()
+  adWatchdogId = window.setTimeout(() => {
+    adWatchdogId = null
+    if (import.meta.env.DEV) console.warn('[ads] watchdog: forcing ad resume')
+    onTimeout()
+  }, 90_000)
 }
 
 export const adPlayingRef = readonly(adPlaying)
@@ -200,14 +226,7 @@ export function showStartupInterstitial(onDone?: () => void): void {
     return
   }
 
-  try {
-    ysdk.adv.showFullscreenAdv({
-      callbacks: createFullscreenCallbacks(finish),
-    })
-  } catch (err) {
-    if (import.meta.env.DEV) console.warn('[ads] startup interstitial failed', err)
-    finish()
-  }
+  showFullscreenAdvSafe(createFullscreenCallbacks(finish), finish)
 }
 
 /**
@@ -227,6 +246,12 @@ export function showInterstitialThen(
   reason?: string,
   options?: InterstitialOptions,
 ): void {
+  const forceAttempt = options?.forceAttempt === true || options?.userInitiated === true
+  if (forceAttempt) {
+    showForcedInterstitialThen(onDone, reason)
+    return
+  }
+
   const finish = () => {
     try {
       onDone()
@@ -234,8 +259,6 @@ export function showInterstitialThen(
       if (import.meta.env.DEV) console.warn('[ads] interstitial onDone failed', err)
     }
   }
-
-  const forceAttempt = options?.forceAttempt === true || options?.userInitiated === true
 
   if (adPlaying.value) {
     window.addEventListener(
@@ -246,7 +269,7 @@ export function showInterstitialThen(
     return
   }
 
-  if (!forceAttempt && !canShowInterstitial(options)) {
+  if (!canShowInterstitial(options)) {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.info('[ads] interstitial skipped (cooldown)', reason)
@@ -258,7 +281,7 @@ export function showInterstitialThen(
   invokeFullscreenInterstitial(finish, reason)
 }
 
-/** Всегда вызывает SDK: без клиентских кулдаунов, с паузой до ответа платформы. */
+/** Всегда вызывает SDK по клику игрока: без клиентских кулдаунов и без записи в таймеры. */
 function showForcedInterstitialThen(onDone: () => void, reason?: string): void {
   const finish = () => {
     try {
@@ -277,77 +300,63 @@ function showForcedInterstitialThen(onDone: () => void, reason?: string): void {
     return
   }
 
-  let paused = false
-  const pause = (): void => {
-    if (paused) return
-    paused = true
+  let pauseEmitted = false
+  const pauseOnce = (): void => {
+    if (pauseEmitted) return
+    pauseEmitted = true
     emitPause()
   }
-  const resume = (): void => {
-    if (!paused) return
-    paused = false
-    emitResume()
+  const resumeOnce = (): void => {
+    if (pauseEmitted) emitResume()
   }
   const done = (): void => {
-    resume()
+    resumeOnce()
     finish()
   }
-
-  pause()
 
   const ysdk = getYsdk()
   if (!ysdk) {
     if (import.meta.env.DEV) {
       // eslint-disable-next-line no-console
       console.info('[ads] forced interstitial (dev stub)', reason)
+      pauseOnce()
       window.setTimeout(() => {
-        markInterstitialShown()
         done()
       }, 1200)
       return
     }
-    done()
+    finish()
     return
   }
 
-  let tracked = false
-  try {
-    ysdk.adv.showFullscreenAdv({
-      callbacks: {
-        onOpen: () => {
-          if (!tracked) {
-            tracked = true
-            markInterstitialShown()
-          }
-        },
-        onClose: (wasShown = false) => {
-          if (wasShown && !tracked) {
-            tracked = true
-            markInterstitialShown()
-          }
-          done()
-        },
-        onError: () => done(),
-        onOffline: () => done(),
-      },
-    })
-  } catch (err) {
-    if (import.meta.env.DEV) console.warn('[ads] forced interstitial failed', err)
-    done()
-  }
+  pauseOnce()
+  showFullscreenAdvSafe(
+    {
+      onOpen: pauseOnce,
+      onClose: () => done(),
+      onError: () => done(),
+      onOffline: () => done(),
+    },
+    done,
+  )
 }
 
-/** Реклама перед рестартом — SDK вызывается каждый раз. */
+/** Полноэкранная реклама по клику — без клиентских кулдаунов (частоту решает SDK). */
+export function showClickInterstitialThen(onDone: () => void, reason?: string): void {
+  showForcedInterstitialThen(onDone, reason)
+}
+
+/** Реклама перед рестартом — каждый клик, без клиентского кулдауна. */
 export function showRestartInterstitialThen(onDone: () => void): void {
-  showForcedInterstitialThen(onDone, 'restart')
+  showClickInterstitialThen(onDone, 'restart')
 }
 
-/** Реклама перед получением награды — SDK вызывается при каждом «Забрать». */
+/** Реклама перед получением награды — каждый клик, без клиентского кулдауна. */
 export function showRewardClaimInterstitialThen(
   onDone: () => void,
   reason: 'quest_reward' | 'daily_reward' = 'quest_reward',
 ): void {
-  showForcedInterstitialThen(onDone, reason)
+  showClickInterstitialThen(onDone, reason)
 }
 
 /** Плановая реклама в геймплее — через общий кулдаун, с ожиданием готовности. */
@@ -388,13 +397,88 @@ function invokeFullscreenInterstitial(finish: () => void, reason?: string): void
     return
   }
 
+  showFullscreenAdvSafe(createFullscreenCallbacks(finish), finish)
+}
+
+function showFullscreenAdvSafe(callbacks: YsdkFullscreenCallbacks, onFail: () => void): void {
+  const ysdk = getYsdk()
+  if (!ysdk?.adv?.showFullscreenAdv) {
+    onFail()
+    return
+  }
+
+  let finished = false
+  const finishAd = (run?: () => void): void => {
+    if (finished) return
+    finished = true
+    clearAdWatchdog()
+    run?.()
+  }
+
+  const wrapped: YsdkFullscreenCallbacks = {
+    onOpen: () => callbacks.onOpen?.(),
+    onClose: (wasShown) => {
+      finishAd(() => callbacks.onClose?.(wasShown))
+    },
+    onError: (err) => {
+      if (import.meta.env.DEV) console.warn('[ads] fullscreen onError', err)
+      finishAd(() => callbacks.onError?.(err))
+    },
+    onOffline: () => {
+      finishAd(() => callbacks.onOffline?.())
+    },
+  }
+
+  armAdWatchdog(() => {
+    emitResume()
+    onFail()
+  })
+
   try {
-    ysdk.adv.showFullscreenAdv({
-      callbacks: createFullscreenCallbacks(finish),
-    })
+    ysdk.adv.showFullscreenAdv({ callbacks: wrapped })
   } catch (err) {
-    if (import.meta.env.DEV) console.warn('[ads] interstitial failed', err)
-    finish()
+    if (import.meta.env.DEV) console.warn('[ads] showFullscreenAdv failed', err)
+    finishAd(onFail)
+  }
+}
+
+function showRewardedVideoSafe(callbacks: YsdkRewardedCallbacks, onFail: () => void): void {
+  const ysdk = getYsdk()
+  if (!ysdk?.adv?.showRewardedVideo) {
+    onFail()
+    return
+  }
+
+  let finished = false
+  const finishAd = (run?: () => void): void => {
+    if (finished) return
+    finished = true
+    clearAdWatchdog()
+    run?.()
+  }
+
+  const wrapped: YsdkRewardedCallbacks = {
+    onOpen: () => callbacks.onOpen?.(),
+    onRewarded: () => callbacks.onRewarded?.(),
+    onClose: () => {
+      finishAd(() => callbacks.onClose?.())
+    },
+    onError: (err) => {
+      if (import.meta.env.DEV) console.warn('[ads] rewarded onError', err)
+      finishAd(() => callbacks.onError?.(err))
+    },
+  }
+
+  armAdWatchdog(() => {
+    emitResume()
+    onFail()
+  })
+
+  try {
+    ysdk.adv.showRewardedVideo({ callbacks: wrapped })
+  } catch (err) {
+    if (import.meta.env.DEV) console.warn('[ads] showRewardedVideo failed', err)
+    finishAd(onFail)
   }
 }
 
@@ -403,8 +487,10 @@ function invokeFullscreenInterstitial(finish: () => void, reason?: string): void
  * In dev (no SDK), reward is granted immediately for testing.
  */
 export function showRewarded(onReward: () => void): void {
-  if (adPlaying.value) return
-  lastAnyAdAt = getServerTime()
+  if (adPlaying.value) {
+    window.addEventListener('ads:resume', () => showRewarded(onReward), { once: true })
+    return
+  }
 
   const ysdk = getYsdk()
   if (!ysdk) {
@@ -426,25 +512,26 @@ export function showRewarded(onReward: () => void): void {
   const resumeOnce = () => {
     if (pauseEmitted) emitResume()
   }
-
-  try {
-    ysdk.adv.showRewardedVideo({
-      callbacks: {
-        onOpen: pauseOnce,
-        onRewarded: () => {
-          granted = true
-        },
-        onClose: () => {
-          resumeOnce()
-          if (granted) onReward()
-        },
-        onError: () => {
-          resumeOnce()
-        },
-      },
-    })
-  } catch (err) {
-    if (import.meta.env.DEV) console.warn('[ads] rewarded failed', err)
+  const finish = () => {
     resumeOnce()
   }
+
+  pauseOnce()
+  showRewardedVideoSafe(
+    {
+      onOpen: pauseOnce,
+      onRewarded: () => {
+        granted = true
+      },
+      onClose: () => {
+        lastAnyAdAt = getServerTime()
+        finish()
+        if (granted) onReward()
+      },
+      onError: () => {
+        finish()
+      },
+    },
+    finish,
+  )
 }

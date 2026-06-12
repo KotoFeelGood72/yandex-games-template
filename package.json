@@ -10,7 +10,9 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "format": "prettier --write --experimental-cli src/",
-    "record:gameplay": "node scripts/record-gameplay.mjs"
+    "record:gameplay": "node scripts/record-gameplay.mjs",
+    "record:gameplay:16x9": "node --env-file=scripts/record-promo.env scripts/record-gameplay.mjs",
+    "record:gameplay:9x16": "node --env-file=scripts/record-promo-9x16.env scripts/record-gameplay.mjs"
   },
   "dependencies": {
     "@fontsource/nunito": "^5.2.7",

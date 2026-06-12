@@ -4,7 +4,7 @@ import { ref } from 'vue'
 import HubLayout from '@/components/hub/HubLayout.vue'
 import logoUrl from '@/assets/brand/logo.webp'
 import catsIllustration from '@/assets/ui/illustrations/cats.webp'
-import { showInterstitialThen } from '@/ads/ads'
+import { showClickInterstitialThen } from '@/ads/ads'
 import { useGsapIdleFloat, useGsapPopEnter } from '@/composables/useGsapEnter'
 import { useGameStore } from '@/stores/game'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -24,17 +24,13 @@ useGsapPopEnter(catsRef, 0.25)
 useGsapIdleFloat(catsRef, 0.7)
 
 function onPlay(): void {
-  showInterstitialThen(
-    () => {
-      if (!player.progress.tutorialCompleted) {
-        store.showTutorial()
-      } else {
-        store.startGame()
-      }
-    },
-    'start_game',
-    { userInitiated: true },
-  )
+  showClickInterstitialThen(() => {
+    if (!player.progress.tutorialCompleted) {
+      store.showTutorial()
+    } else {
+      store.startGame()
+    }
+  }, 'start_game')
 }
 </script>
 

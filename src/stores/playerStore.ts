@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, toRaw } from 'vue'
 
 import { collectionMilestones } from '@/game/config/collectionMilestones'
 import { MAX_CATALOG_LEVEL } from '@/game/config/cats'
@@ -125,8 +125,9 @@ export const usePlayerStore = defineStore('player', () => {
   )
 
   function persist(flush = false): void {
-    saveJson(STORAGE_KEY, progress.value)
-    saveCatMergeProgress(progress.value as unknown as Record<string, unknown>, flush)
+    const snapshot = toRaw(progress.value)
+    saveJson(STORAGE_KEY, snapshot)
+    saveCatMergeProgress(snapshot as unknown as Record<string, unknown>, flush)
   }
 
   function flushProgressNow(): void {

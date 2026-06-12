@@ -7,13 +7,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OUT_DIR = path.join(ROOT, 'recordings')
 const BASE_URL = process.env.GAME_URL ?? 'http://localhost:5173/'
-const MAX_DURATION_MS = 28_000
+const MAX_DURATION_MS = Number(process.env.RECORD_DURATION_MS ?? 25_000)
+const GAMEPLAY_ONLY = process.env.GAMEPLAY_ONLY === '1' || process.env.GAMEPLAY_ONLY === 'true'
 
 /** @type {Array<{ name: string; width: number; height: number }>} */
-const FORMATS = [
+const ALL_FORMATS = [
   { name: '16x9', width: 1280, height: 720 },
   { name: '9x16', width: 720, height: 1280 },
 ]
+
+const FORMATS =
+  process.env.RECORD_FORMAT === '16x9'
+    ? [ALL_FORMATS[0]]
+    : process.env.RECORD_FORMAT === '9x16'
+      ? [ALL_FORMATS[1]]
+      : ALL_FORMATS
 
 async function waitForPlayButton(page) {
   await page.getByRole('button', { name: 'Играть' }).waitFor({ timeout: 45_000 })
@@ -54,6 +62,35 @@ async function dropOneCat(page, index) {
   return true
 }
 
+async function startGameplay(page, remain) {
+  await waitForPlayButton(page)
+  await sleep(page, GAMEPLAY_ONLY ? 600 : 2200, remain)
+  await page.getByRole('button', { name: 'Играть' }).click()
+  await sleep(page, 500, remain)
+  await skipTutorialIfVisible(page)
+  await page.locator('.game-canvas__canvas').waitFor({ state: 'visible', timeout: 10_000 })
+}
+
+async function playDrops(page, remain, startIndex = 0) {
+  let dropIndex = startIndex
+  while (remain() > 200) {
+    const dropped = await dropOneCat(page, dropIndex)
+    if (!dropped) break
+    dropIndex += 1
+    await sleep(page, 380, remain)
+  }
+}
+
+async function runGameplayOnly(page) {
+  const startedAt = Date.now()
+  const remain = () => Math.max(0, MAX_DURATION_MS - (Date.now() - startedAt))
+
+  await startGameplay(page, remain)
+  await sleep(page, 400, remain)
+  await playDrops(page, remain)
+  await sleep(page, remain(), remain)
+}
+
 async function runFullGameDemo(page) {
   const startedAt = Date.now()
   const remain = () => Math.max(0, MAX_DURATION_MS - (Date.now() - startedAt))
@@ -73,11 +110,7 @@ async function runFullGameDemo(page) {
   await clickNav(page, 'Домик')
   await sleep(page, 1000, remain)
 
-  await page.getByRole('button', { name: 'Играть' }).click()
-  await sleep(page, 500, remain)
-  await skipTutorialIfVisible(page)
-
-  await page.locator('.game-canvas__canvas').waitFor({ state: 'visible', timeout: 10_000 })
+  await startGameplay(page, remain)
 
   let dropIndex = 0
   while (remain() > 350) {
@@ -114,7 +147,11 @@ async function recordFormat(browser, format) {
 
   const page = await context.newPage()
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 60_000 })
-  await runFullGameDemo(page)
+  if (GAMEPLAY_ONLY) {
+    await runGameplayOnly(page)
+  } else {
+    await runFullGameDemo(page)
+  }
 
   const video = page.video()
   await context.close()
@@ -137,7 +174,9 @@ async function main() {
     for (const format of FORMATS) {
       const file = await recordFormat(browser, format)
       console.log(`Recorded: ${file}`)
-      console.log(`Format: ${format.name} (${format.width}x${format.height}), max ${MAX_DURATION_MS / 1000}s`)
+      console.log(
+        `Format: ${format.name} (${format.width}x${format.height}), ${MAX_DURATION_MS / 1000}s, gameplayOnly=${GAMEPLAY_ONLY}`,
+      )
     }
   } finally {
     await browser.close()

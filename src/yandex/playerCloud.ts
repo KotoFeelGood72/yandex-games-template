@@ -14,6 +14,11 @@ let writeTimer: ReturnType<typeof setTimeout> | null = null
 let lastSetDataAt = 0
 let writeInFlight = false
 
+/** SDK шлёт данные в parent через structured clone — только plain JSON. */
+function toPlainRecord(value: Record<string, unknown>): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(value)) as Record<string, unknown>
+}
+
 function useCloudPlayer(): boolean {
   return !import.meta.env.DEV && Boolean(getYsdk()?.getPlayer)
 }
@@ -101,7 +106,7 @@ async function flushPlayerData(forceFlush = false): Promise<void> {
   pendingFlush = false
 
   try {
-    await player.setData({ ...playerBlob }, shouldFlush)
+    await player.setData(toPlainRecord(playerBlob), shouldFlush)
     lastSetDataAt = Date.now()
   } catch (err) {
     if (import.meta.env.DEV) console.warn('[playerCloud] setData failed', err)
@@ -123,7 +128,7 @@ export function saveCatMergeProgress(data: Record<string, unknown>, flush = fals
   if (!useCloudPlayer()) return
 
   void loadPlayerBlob().then((blob) => {
-    blob[CAT_MERGE_SAVE_KEY] = data
+    blob[CAT_MERGE_SAVE_KEY] = toPlainRecord(data)
     schedulePlayerWrite(flush)
   })
 }

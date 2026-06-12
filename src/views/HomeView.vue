@@ -19,7 +19,12 @@ import VictoryModal from '@/components/VictoryModal.vue'
 import { isHubState } from '@/game/types/game.types'
 import type { GameEngine } from '@/game/engine/GameEngine'
 import { useGameplayInterstitialSchedule } from '@/composables/useGameplayInterstitialSchedule'
-import { showInterstitialThen, showRestartInterstitialThen, showRewarded, showStartupInterstitial } from '@/ads/ads'
+import {
+  showClickInterstitialThen,
+  showRestartInterstitialThen,
+  showRewarded,
+  showStartupInterstitial,
+} from '@/ads/ads'
 import { pauseMusic, resumeMusic } from '@/audio/sounds'
 import { useGameStore } from '@/stores/game'
 import { usePlayerStore } from '@/stores/playerStore'
@@ -115,17 +120,13 @@ function onRestart(): void {
 
 function onMenu(): void {
   const askReviewAfterMenu = store.gameState === 'victory'
-  showInterstitialThen(
-    () => {
-      engineRef.value?.stop()
-      store.goToMenu()
-      if (askReviewAfterMenu) {
-        tryShowPlatformReviewWhenSafe()
-      }
-    },
-    'menu',
-    { userInitiated: true },
-  )
+  showClickInterstitialThen(() => {
+    engineRef.value?.stop()
+    store.goToMenu()
+    if (askReviewAfterMenu) {
+      tryShowPlatformReviewWhenSafe()
+    }
+  }, 'menu')
 }
 
 function onContinueGameOver(): void {
