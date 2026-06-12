@@ -30,6 +30,13 @@ npm run dev
 npm run build
 ```
 
+## Деплой
+
+Проект автоматически публикуется на GitHub Pages при push в `main`.
+
+- Репозиторий: https://github.com/KotoFeelGood72/yandex-games-template
+- Сайт: https://kotofeelgood72.github.io/yandex-games-template/
+
 ## Настройка под свою игру
 
 1. Замените `DEFAULT_SAVE_KEY` в `src/yandex/playerStorage.ts`.
