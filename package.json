@@ -8,37 +8,23 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build",
-    "format": "prettier --write --experimental-cli src/",
-    "record:gameplay": "node scripts/record-gameplay.mjs",
-    "record:gameplay:16x9": "node --env-file=scripts/record-promo.env scripts/record-gameplay.mjs",
-    "record:gameplay:9x16": "node --env-file=scripts/record-promo-9x16.env scripts/record-gameplay.mjs"
+    "type-check": "vue-tsc --build --force",
+    "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
-    "@fontsource/nunito": "^5.2.7",
-    "@fontsource/rubik": "^5.2.8",
-    "@iconify-json/mdi": "^1.2.3",
-    "gsap": "^3.15.0",
-    "lottie-web": "^5.13.0",
-    "matter-js": "^0.20.0",
     "pinia": "^3.0.4",
-    "swiper": "^12.2.0",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
-    "@types/matter-js": "^0.20.2",
     "@types/node": "^24.12.2",
     "@vitejs/plugin-vue": "^6.0.6",
     "@vue/tsconfig": "^0.9.1",
     "npm-run-all2": "^8.0.4",
-    "playwright": "^1.60.0",
     "prettier": "3.8.3",
     "typescript": "~6.0.0",
-    "unplugin-icons": "^23.0.1",
     "vite": "^8.0.8",
-    "vite-plugin-vue-devtools": "^8.1.1",
     "vue-tsc": "^3.2.6"
   },
   "engines": {

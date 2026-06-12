@@ -1,298 +1,192 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import gsap from 'gsap'
+import { onMounted, ref } from 'vue'
 
-import AdCountdownModal from '@/components/AdCountdownModal.vue'
-import BoosterPanel from '@/components/BoosterPanel.vue'
-import GameCanvas from '@/components/GameCanvas.vue'
-import GameHud from '@/components/GameHud.vue'
-import GameOverModal from '@/components/GameOverModal.vue'
-import GameToast from '@/components/GameToast.vue'
-import CollectionScreen from '@/components/screens/CollectionScreen.vue'
-import HomeScreen from '@/components/screens/HomeScreen.vue'
-import ShopScreen from '@/components/screens/ShopScreen.vue'
-import TasksScreen from '@/components/screens/TasksScreen.vue'
-import PauseModal from '@/components/PauseModal.vue'
-import SettingsModal from '@/components/SettingsModal.vue'
-import TutorialModal from '@/components/TutorialModal.vue'
-import VictoryModal from '@/components/VictoryModal.vue'
-import { isHubState } from '@/game/types/game.types'
-import type { GameEngine } from '@/game/engine/GameEngine'
-import { useGameplayInterstitialSchedule } from '@/composables/useGameplayInterstitialSchedule'
 import {
-  showClickInterstitialThen,
-  showRestartInterstitialThen,
+  showInterstitial,
   showRewarded,
   showStartupInterstitial,
 } from '@/ads/ads'
-import { pauseMusic, resumeMusic } from '@/audio/sounds'
-import { useGameStore } from '@/stores/game'
-import { usePlayerStore } from '@/stores/playerStore'
-import { gameplayPause, gameplayResume } from '@/yandex/sdk'
+import { fetchLeaderboardEntries, LEADERBOARD_NAME, submitLeaderboardScore } from '@/yandex/leaderboard'
+import { loadPlayerData, savePlayerData } from '@/yandex/playerStorage'
+import { getLang, isYsdkReady } from '@/yandex/sdk'
 import { tryShowPlatformReviewWhenSafe } from '@/yandex/reviewPrompt'
 
-const store = useGameStore()
-const player = usePlayerStore()
+const sdkReady = ref(isYsdkReady())
+const lang = ref(getLang())
+const saveStatus = ref('—')
+const leaderboardStatus = ref('—')
 
-const showSettings = ref(false)
-const engineRef = ref<GameEngine | null>(null)
-const gameContainerWidth = ref<number | null>(null)
-const gameCanvasRef = ref<InstanceType<typeof GameCanvas> | null>(null)
-const gameScreenRef = ref<HTMLElement | null>(null)
+onMounted(async () => {
+  sdkReady.value = isYsdkReady()
+  lang.value = getLang()
 
-const isPlaying = computed(() => store.gameState === 'playing')
-const { showCountdown, countdown, isGameplayBlocked, resetSchedule } =
-  useGameplayInterstitialSchedule(isPlaying)
-const isCanvasActive = computed(() => isPlaying.value && !isGameplayBlocked.value)
-const showGameScreen = computed(() =>
-  ['playing', 'paused', 'gameOver', 'victory'].includes(store.gameState),
-)
-
-const MUSIC_PAUSE_STATES = ['paused', 'gameOver', 'victory', 'tutorial'] as const
-
-function syncMusicWithGameState(state: typeof store.gameState): void {
-  if (MUSIC_PAUSE_STATES.includes(state as (typeof MUSIC_PAUSE_STATES)[number])) {
-    pauseMusic()
-  } else {
-    resumeMusic()
-  }
-}
-
-onMounted(() => {
-  syncMusicWithGameState(store.gameState)
-  showStartupInterstitial()
-
-  window.addEventListener('resize', resetGameContainerLayout, { passive: true })
-  window.addEventListener('orientationchange', resetGameContainerLayout, { passive: true })
-  window.visualViewport?.addEventListener('resize', resetGameContainerLayout, { passive: true })
+  const save = await loadPlayerData<{ visits?: number }>()
+  saveStatus.value = save ? `Визитов: ${save.visits ?? 0}` : 'Нет сохранения'
 })
 
-function onEngineReady(engine: GameEngine): void {
-  engineRef.value = engine
-  if (store.gameState === 'playing') {
-    engine.start()
-  }
+async function onSaveDemo(): Promise<void> {
+  const current = (await loadPlayerData<{ visits?: number }>()) ?? { visits: 0 }
+  const next = { visits: (current.visits ?? 0) + 1 }
+  await savePlayerData(next, undefined, true)
+  saveStatus.value = `Визитов: ${next.visits}`
 }
 
-watch(
-  () => store.gameState,
-  (state, prev) => {
-    syncMusicWithGameState(state)
-
-    if (state === 'playing' && prev !== 'paused') {
-      resetSchedule()
-    }
-
-    const engine = engineRef.value
-    if (engine) {
-      if (state === 'playing') {
-        if (prev === 'paused' || prev === 'victory' || prev === 'gameOver') {
-          engine.resumePhysics()
-        }
-      } else if (state === 'paused' || state === 'gameOver' || state === 'victory') {
-        engine.pausePhysics()
-      }
-    }
-
-    if (isHubState(state) || ['paused', 'gameOver', 'victory', 'tutorial'].includes(state)) {
-      gameplayPause()
-    } else if (state === 'playing') {
-      gameplayResume()
-    }
-  },
-)
-
-function onPause(): void {
-  store.pauseGame()
+function onInterstitial(): void {
+  showInterstitial('demo')
 }
 
-function onResume(): void {
-  store.resumeGame()
-}
-
-function onRestart(): void {
-  showRestartInterstitialThen(() => {
-    engineRef.value?.start()
-    store.restartGame()
-    resetSchedule()
-  })
-}
-
-function onMenu(): void {
-  const askReviewAfterMenu = store.gameState === 'victory'
-  showClickInterstitialThen(() => {
-    engineRef.value?.stop()
-    store.goToMenu()
-    if (askReviewAfterMenu) {
-      tryShowPlatformReviewWhenSafe()
-    }
-  }, 'menu')
-}
-
-function onContinueGameOver(): void {
-  if (!store.canContinueWithAd) return
+function onRewarded(): void {
   showRewarded(() => {
-    engineRef.value?.continueAfterGameOver()
-    store.registerAdContinue()
+    saveStatus.value = 'Награда получена'
   })
 }
 
-function onVictoryContinue(): void {
-  store.continueAfterVictory()
-  engineRef.value?.resumePhysics()
+async function onLeaderboard(): Promise<void> {
+  await submitLeaderboardScore(100)
+  const entries = await fetchLeaderboardEntries(100)
+  leaderboardStatus.value = `${LEADERBOARD_NAME}: ${entries.length} записей`
 }
 
-function onGameLayout(size: { width: number; height: number }): void {
-  gameContainerWidth.value = size.width
+function onReview(): void {
+  tryShowPlatformReviewWhenSafe()
 }
 
-function resetGameContainerLayout(): void {
-  gameContainerWidth.value = null
-  nextTick(() => gameCanvasRef.value?.relayout())
+function onStartupAd(): void {
+  showStartupInterstitial()
 }
-
-watch(showGameScreen, async (show) => {
-  if (!show) {
-    gameContainerWidth.value = null
-    return
-  }
-
-  await nextTick()
-  if (gameScreenRef.value) {
-    gsap.fromTo(
-      gameScreenRef.value,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.35, ease: 'power2.out' },
-    )
-  }
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', resetGameContainerLayout)
-  window.removeEventListener('orientationchange', resetGameContainerLayout)
-  window.visualViewport?.removeEventListener('resize', resetGameContainerLayout)
-})
 </script>
 
 <template>
-  <div class="app-shell">
-    <HomeScreen v-if="store.gameState === 'menu'" @settings="showSettings = true" />
-    <ShopScreen v-else-if="store.gameState === 'shop'" @settings="showSettings = true" />
-    <CollectionScreen
-      v-else-if="store.gameState === 'collection'"
-      @settings="showSettings = true"
-    />
-    <TasksScreen v-else-if="store.gameState === 'tasks'" @settings="showSettings = true" />
+  <main class="home">
+    <header class="home__header">
+      <h1 class="home__title">Yandex Games Template</h1>
+      <p class="home__subtitle">Минимальный каркас с интеграцией Yandex SDK</p>
+    </header>
 
-    <div v-if="store.gameState === 'tutorial'" class="scene-bg tutorial-bg" aria-hidden="true" />
+    <section class="home__card">
+      <h2 class="home__card-title">SDK</h2>
+      <dl class="home__meta">
+        <dt>SDK</dt>
+        <dd>{{ sdkReady ? 'готов' : 'dev / не инициализирован' }}</dd>
+        <dt>Язык</dt>
+        <dd>{{ lang }}</dd>
+        <dt>Облако</dt>
+        <dd>{{ saveStatus }}</dd>
+      </dl>
+      <button type="button" class="home__btn" @click="onSaveDemo">Сохранить визит</button>
+    </section>
 
-    <div v-else-if="showGameScreen" ref="gameScreenRef" class="game-screen scene-bg">
-      <div class="scene-column game-screen__column">
-        <div
-          class="game-screen__container"
-          :style="gameContainerWidth ? { width: `${gameContainerWidth}px` } : undefined"
-        >
-          <GameHud @pause="onPause" />
-          <GameCanvas
-            ref="gameCanvasRef"
-            :active="isCanvasActive"
-            @engine-ready="onEngineReady"
-            @layout-change="onGameLayout"
-          />
-          <BoosterPanel />
-        </div>
+    <section class="home__card">
+      <h2 class="home__card-title">Лидерборд</h2>
+      <button type="button" class="home__btn home__btn--secondary" @click="onLeaderboard">
+        Отправить счёт и загрузить таблицу
+      </button>
+      <p class="home__hint">{{ leaderboardStatus }}</p>
+    </section>
+
+    <section class="home__card">
+      <h2 class="home__card-title">Реклама</h2>
+      <div class="home__actions">
+        <button type="button" class="home__btn" @click="onStartupAd">Стартовая</button>
+        <button type="button" class="home__btn home__btn--secondary" @click="onInterstitial">
+          Interstitial
+        </button>
+        <button type="button" class="home__btn home__btn--secondary" @click="onRewarded">
+          Rewarded
+        </button>
+        <button type="button" class="home__btn home__btn--ghost" @click="onReview">Оценка</button>
       </div>
-    </div>
-
-    <PauseModal
-      :show="store.gameState === 'paused'"
-      @resume="onResume"
-      @restart="onRestart"
-      @menu="onMenu"
-    />
-
-    <GameOverModal
-      :show="store.gameState === 'gameOver'"
-      @continue="onContinueGameOver"
-      @restart="onRestart"
-      @menu="onMenu"
-    />
-
-    <VictoryModal
-      :show="store.gameState === 'victory'"
-      @continue="onVictoryContinue"
-      @menu="onMenu"
-    />
-
-    <TutorialModal :show="store.gameState === 'tutorial'" />
-
-    <SettingsModal :show="showSettings" @close="showSettings = false" />
-
-    <AdCountdownModal :show="showCountdown" :countdown="countdown" />
-
-    <GameToast />
-  </div>
+    </section>
+  </main>
 </template>
 
 <style scoped>
-.app-shell {
-  width: 100%;
+.home {
   min-height: 100dvh;
+  padding: 24px 16px 32px;
+  background: var(--color-background);
+  color: var(--color-text);
 }
 
-.game-screen {
-  position: fixed;
-  inset: 0;
+.home__header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.home__title {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.home__subtitle {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.home__card {
+  max-width: 420px;
+  margin: 0 auto 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+}
+
+.home__card-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.home__meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.home__meta dt {
+  opacity: 0.7;
+}
+
+.home__meta dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.home__actions {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  height: 100dvh;
-  max-height: 100dvh;
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.game-screen__column {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  max-height: 100dvh;
-  min-height: 0;
+.home__btn {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #ffd54a;
+  color: #1a1a1a;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.game-screen__container {
-  container-type: inline-size;
-  container-name: game-ui;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  width: 100%;
-  max-width: min(100%, var(--game-column-width));
-  height: 100%;
-  max-height: 100%;
-  min-height: 0;
+.home__btn--secondary {
+  background: #e8eef5;
 }
 
-.game-screen__container :deep(.game-hud) {
-  flex-shrink: 0;
+.home__btn--ghost {
+  background: transparent;
+  border: 1px solid var(--color-border);
 }
 
-.game-screen__container :deep(.game-screen__playfield) {
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-}
-
-.game-screen__container :deep(.booster-bar) {
-  flex-shrink: 0;
-}
-
-.tutorial-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
+.home__hint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
 }
 </style>

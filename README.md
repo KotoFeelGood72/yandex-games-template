@@ -1,36 +1,37 @@
 # Yandex Games Template
 
-Vue 3 + Vite + Pinia шаблон для игр под Яндекс.Игры. Содержит готовую обёртку
-над Yandex Games SDK и модуль рекламы.
+Vue 3 + Vite шаблон для игр под Яндекс.Игры. Содержит готовую обёртку
+над Yandex Games SDK, модуль рекламы и облачные сохранения.
 
 ## Что включено
 
-- **`src/yandex/sdk.ts`** — инициализация SDK, `getLang()`,
-  reference-counted `gameplayPause()` / `gameplayResume()`, `tryRequestReview()`.
-- **`src/ads/ads.ts`** — `showInterstitial()` и `showRewarded()` с кулдаунами
-  (60s после старта, 90s между показами) и автопаузой через события
-  `window:ads:pause` / `window:ads:resume`.
-- **`src/audio/sounds.ts`** — обёртка над Web Audio API (без файлов),
-  учитывает требования Яндекса: пауза при `document.hidden`, подавление
-  Media Session API.
-- **`src/stores/`** — пустой каркас для Pinia сторов.
-- **`index.html`** — подключает Yandex `/sdk.js` (в проде даёт его Яндекс,
-  в dev — мягко падает на dev-стабы).
+- **`src/yandex/sdk.ts`** — инициализация SDK, `getLang()`, серверное время,
+  reference-counted `gameplayPause()` / `gameplayResume()`, оценка игры.
+- **`src/yandex/appReady.ts`** — `LoadingAPI.ready()` и `gameplayInit()`.
+- **`src/yandex/playerStorage.ts`** — облачные сохранения через `getPlayer().setData()`.
+- **`src/yandex/leaderboard.ts`** — отправка и загрузка таблицы лидеров.
+- **`src/yandex/reviewPrompt.ts`** — безопасный показ окна оценки.
+- **`src/yandex/progressLifecycle.ts`** — flush сохранений при сворачивании.
+- **`src/ads/ads.ts`** — interstitial и rewarded с кулдаунами и событиями
+  `ads:pause` / `ads:resume`.
+- **`index.html`** — подключает `/sdk.js` (в проде его отдаёт Яндекс,
+  в dev работают dev-стабы).
 
-## Project Setup
+## Быстрый старт
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+## Сборка
 
 ```sh
 npm run build
 ```
+
+## Настройка под свою игру
+
+1. Замените `DEFAULT_SAVE_KEY` в `src/yandex/playerStorage.ts`.
+2. Замените `LEADERBOARD_NAME` в `src/yandex/leaderboard.ts`.
+3. Удалите демо-экран `src/views/HomeView.vue` и подключите свою игру.

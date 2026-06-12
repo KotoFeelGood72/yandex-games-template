@@ -1,8 +1,8 @@
 import { getYsdk } from '@/yandex/sdk'
-import { ensureCloudPlayer } from '@/yandex/playerCloud'
+import { ensurePlayer } from '@/yandex/playerStorage'
 
-/** Техническое имя таблицы в консоли Яндекс Игр */
-export const LEADERBOARD_NAME = 'catsboard'
+/** Техническое имя таблицы в консоли Яндекс Игр — замените на своё. */
+export const LEADERBOARD_NAME = 'leaderboard'
 
 export interface LeaderEntry {
   rank: number
@@ -30,28 +30,11 @@ interface YandexLeaderboardsApi {
   }>
 }
 
-function loadDevBestScore(): number {
-  if (!import.meta.env.DEV) return 0
-
-  try {
-    const raw = localStorage.getItem('cat-merge-player')
-    if (!raw) return 0
-    const parsed = JSON.parse(raw) as { bestScore?: unknown }
-    return typeof parsed.bestScore === 'number' ? parsed.bestScore : 0
-  } catch {
-    return 0
-  }
-}
-
-function getDevMockEntries(): LeaderEntry[] {
-  const best = loadDevBestScore()
-
+function getDevMockEntries(localBest = 0): LeaderEntry[] {
   const rows: Omit<LeaderEntry, 'rank'>[] = [
-    { name: 'Игрок 2', score: 2048, isCurrentPlayer: false },
-    { name: 'Игрок 3', score: 1024, isCurrentPlayer: false },
-    { name: 'Вы', score: best, isCurrentPlayer: true },
-    { name: 'Игрок 4', score: 512, isCurrentPlayer: false },
-    { name: 'Игрок 5', score: 256, isCurrentPlayer: false },
+    { name: 'Игрок 1', score: 1000, isCurrentPlayer: false },
+    { name: 'Вы', score: localBest, isCurrentPlayer: true },
+    { name: 'Игрок 2', score: 500, isCurrentPlayer: false },
   ]
 
   return rows
@@ -69,13 +52,12 @@ export async function submitLeaderboardScore(score: number): Promise<void> {
   const sdk = getYsdk()
   if (!sdk?.getLeaderboards) {
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.info('[leaderboard] dev stub setScore', LEADERBOARD_NAME, normalized)
     }
     return
   }
 
-  await ensureCloudPlayer()
+  await ensurePlayer()
 
   try {
     const lb = await sdk.getLeaderboards()
@@ -85,19 +67,14 @@ export async function submitLeaderboardScore(score: number): Promise<void> {
   }
 }
 
-/** Отправить локальный рекорд в таблицу Яндекс Игр. */
-export async function syncLeaderboardBest(localBest: number): Promise<void> {
-  await submitLeaderboardScore(localBest)
-}
-
 export async function fetchLeaderboardEntries(localBest = 0): Promise<LeaderEntry[]> {
   const sdk = getYsdk()
   if (!sdk?.getLeaderboards) {
-    if (import.meta.env.DEV) return getDevMockEntries()
+    if (import.meta.env.DEV) return getDevMockEntries(localBest)
     return []
   }
 
-  await ensureCloudPlayer()
+  await ensurePlayer()
 
   try {
     const lb = await sdk.getLeaderboards()

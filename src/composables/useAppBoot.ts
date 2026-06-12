@@ -1,12 +1,7 @@
-import { fallEffectPlayer } from '@/game/effects/fallEffectPlayer'
-import { preloadCatSprites } from '@/game/assets/catSprites'
-import { preloadAudio } from '@/audio/sounds'
-import { usePlayerStore } from '@/stores/playerStore'
-import { useSettingsStore } from '@/stores/settingsStore'
 import { markAppReady } from '@/yandex/appReady'
 import { initYandex } from '@/yandex/sdk'
 
-const MIN_BOOT_MS = 1600
+const MIN_BOOT_MS = 800
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
@@ -14,13 +9,13 @@ function wait(ms: number): Promise<void> {
 
 export async function runAppBoot(onProgress?: (value: number) => void): Promise<void> {
   const bootStart = performance.now()
-  let actualProgress = 0.04
+  let actualProgress = 0.1
   let tickerId = 0
 
   const publish = () => {
     const elapsed = performance.now() - bootStart
     const timeRatio = Math.min(1, elapsed / MIN_BOOT_MS)
-    const timeFloor = 0.08 + timeRatio * 0.82
+    const timeFloor = 0.1 + timeRatio * 0.8
     const shown = Math.min(1, Math.max(actualProgress, timeFloor * 0.92))
     onProgress?.(shown)
   }
@@ -28,22 +23,9 @@ export async function runAppBoot(onProgress?: (value: number) => void): Promise<
   tickerId = window.setInterval(publish, 40)
   publish()
 
-  actualProgress = 0.08
+  actualProgress = 0.2
   await initYandex()
-  actualProgress = 0.28
-  publish()
-
-  useSettingsStore()
-  const player = usePlayerStore()
-
-  await player.loadProgress()
-  actualProgress = 0.52
-  publish()
-
-  preloadAudio()
-
-  await Promise.all([preloadCatSprites(), fallEffectPlayer.preload()])
-  actualProgress = 0.9
+  actualProgress = 0.85
   publish()
 
   const elapsed = performance.now() - bootStart

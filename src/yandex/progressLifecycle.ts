@@ -1,21 +1,14 @@
-import { usePlayerStore } from '@/stores/playerStore'
-import { syncLeaderboardBest } from '@/yandex/leaderboard'
+import { flushPlayerDataNow } from '@/yandex/playerStorage'
 
 let bound = false
 
-function flushProgressAndLeaderboard(): void {
-  const player = usePlayerStore()
-  player.flushProgressNow()
-  void syncLeaderboardBest(player.progress.bestScore)
-}
-
-/** Сохранить прогресс и рекорд при сворачивании / закрытии вкладки. */
+/** Сохранить прогресс при сворачивании / закрытии вкладки. */
 export function bindProgressLifecycle(): void {
   if (bound) return
   bound = true
 
   const onHide = (): void => {
-    flushProgressAndLeaderboard()
+    void flushPlayerDataNow()
   }
 
   document.addEventListener('visibilitychange', () => {
