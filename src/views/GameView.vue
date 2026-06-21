@@ -61,12 +61,12 @@ onUnmounted(() => {
   height: 100dvh;
   overflow: hidden;
   background: #0a0814;
-  --hud-bar-height: 124px;
+  --hud-bar-height: 118px;
 }
 
 @media (max-width: 640px) {
   .game-view {
-    --hud-bar-height: 108px;
+    --hud-bar-height: 100px;
   }
 }
 

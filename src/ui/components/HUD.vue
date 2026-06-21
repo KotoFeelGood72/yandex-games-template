@@ -205,7 +205,7 @@ function togglePause(): void {
         <div class="hud-bar__divider" />
 
         <div class="hud-bar__cluster hud-bar__cluster--items">
-          <div class="moba-slot moba-slot--item">
+          <div class="moba-slot moba-slot--item moba-slot--item-neon">
             <span class="moba-slot__key moba-slot__key--item">1</span>
             <img
               class="hud-bar__item-img hud-bar__item-img--neon"
@@ -217,7 +217,7 @@ function togglePause(): void {
             </span>
           </div>
 
-          <div class="moba-slot moba-slot--item">
+          <div class="moba-slot moba-slot--item moba-slot--item-sushi">
             <span class="moba-slot__key moba-slot__key--item">2</span>
             <img
               class="hud-bar__item-img hud-bar__item-img--sushi"
@@ -229,7 +229,7 @@ function togglePause(): void {
             </span>
           </div>
 
-          <div class="moba-slot moba-slot--item">
+          <div class="moba-slot moba-slot--item moba-slot--item-golden">
             <span class="moba-slot__key moba-slot__key--item">3</span>
             <div class="hud-bar__item-golden">★</div>
             <span v-if="matchStore.playerGolden > 0" class="moba-slot__count">
@@ -250,11 +250,11 @@ function togglePause(): void {
             <strong>{{ playerScore }}</strong>
           </div>
           <div class="hud-bar__tools">
+            <button type="button" class="hud-bar__tool" title="Сброс">
+              <span class="hud-bar__tool-icon hud-bar__tool-icon--trash" />
+            </button>
             <button type="button" class="hud-bar__tool" title="Инвентарь">
               <span class="hud-bar__tool-icon hud-bar__tool-icon--bag" />
-            </button>
-            <button type="button" class="hud-bar__tool" title="Миссии">
-              <span class="hud-bar__tool-icon hud-bar__tool-icon--book" />
             </button>
             <button
               type="button"
@@ -303,10 +303,10 @@ function togglePause(): void {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.65);
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }
 
 .hud__team strong {
@@ -328,70 +328,68 @@ function togglePause(): void {
   text-align: center;
   font-size: 22px;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.92);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .hud__alert {
   align-self: center;
   padding: 4px 12px;
-  border-radius: 4px;
+  border-radius: 3px;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .hud__alert--trader {
-  background: rgba(40, 120, 60, 0.55);
-  border: 1px solid rgba(100, 220, 130, 0.35);
+  border: 1px solid rgba(100, 220, 130, 0.3);
   color: #9effbb;
 }
 
 .hud__alert--golden {
-  background: rgba(120, 90, 20, 0.55);
-  border: 1px solid rgba(255, 210, 80, 0.35);
+  border: 1px solid rgba(255, 210, 80, 0.3);
   color: #ffd966;
 }
 
-/* ── Bottom MOBA strip ── */
+/* ── Bottom strip (compact, centered) ── */
 
 .hud-bar {
-  pointer-events: auto;
+  pointer-events: none;
   display: flex;
   justify-content: center;
-  padding: 0 8px 6px;
+  padding: 0 10px 8px;
 }
 
 .hud-bar__strip {
+  pointer-events: auto;
   display: flex;
   align-items: stretch;
+  justify-content: flex-start;
+  flex-shrink: 0;
   gap: 0;
-  min-height: var(--hud-bar-height, 124px);
-  padding: 6px 10px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, transparent 12%),
-    linear-gradient(180deg, #4a4a52 0%, #323238 18%, #222228 55%, #18181e 100%);
-  border: 2px solid #5c5c64;
-  border-bottom-color: #2a2a30;
-  border-radius: 6px 6px 4px 4px;
+  width: fit-content;
+  max-width: calc(100vw - 20px);
+  min-height: var(--hud-bar-height, 118px);
+  padding: 7px 12px 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(32, 32, 36, 0.48) 0%,
+    rgba(16, 16, 20, 0.58) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.35),
-    0 8px 32px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .hud-bar__divider {
   width: 1px;
   align-self: stretch;
-  margin: 4px 8px;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    rgba(255, 255, 255, 0.12) 20%,
-    rgba(255, 255, 255, 0.12) 80%,
-    transparent
-  );
+  margin: 6px 10px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .hud-bar__cluster {
@@ -406,7 +404,7 @@ function togglePause(): void {
 
 .hud-bar__cluster--abilities,
 .hud-bar__cluster--items {
-  gap: 4px;
+  gap: 3px;
 }
 
 .hud-bar__cluster--meta {
@@ -414,34 +412,28 @@ function togglePause(): void {
   justify-content: center;
   align-items: flex-end;
   gap: 6px;
-  min-width: 72px;
-  padding-left: 4px;
+  min-width: 68px;
+  padding-left: 2px;
 }
 
-/* Stone frame shared */
+/* Flat frames */
 
 .moba-frame {
   position: relative;
-  padding: 3px;
-  background:
-    linear-gradient(145deg, #6a6258 0%, #3a3630 40%, #2a2824 100%);
-  border: 1px solid #1a1814;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
-    0 2px 6px rgba(0, 0, 0, 0.4);
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(150, 140, 130, 0.32);
+  border-radius: 2px;
 }
 
 .moba-frame--map {
-  width: 88px;
-  height: 88px;
-  border-radius: 3px;
+  width: 84px;
+  height: 84px;
 }
 
 .moba-frame--portrait {
-  width: 88px;
-  height: 88px;
-  border-radius: 3px;
+  width: 84px;
+  height: 84px;
   flex-shrink: 0;
 }
 
@@ -452,17 +444,15 @@ function togglePause(): void {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #1a2420;
-  border: 1px solid #0a0a0c;
+  background: rgba(12, 16, 14, 0.55);
 }
 
 .hud-bar__minimap-terrain {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 30% 40%, rgba(50, 70, 45, 0.5), transparent),
-    radial-gradient(ellipse 70% 50% at 70% 60%, rgba(45, 65, 40, 0.45), transparent),
-    #1e2820;
+    radial-gradient(ellipse 80% 60% at 30% 40%, rgba(50, 70, 45, 0.35), transparent),
+    radial-gradient(ellipse 70% 50% at 70% 60%, rgba(45, 65, 40, 0.3), transparent);
 }
 
 .hud-bar__minimap-river {
@@ -470,10 +460,9 @@ function togglePause(): void {
   left: -10%;
   top: 50%;
   width: 120%;
-  height: 14px;
+  height: 12px;
   transform: translateY(-50%) rotate(-28deg);
-  background: linear-gradient(90deg, transparent, rgba(40, 80, 100, 0.55), transparent);
-  filter: blur(1px);
+  background: linear-gradient(90deg, transparent, rgba(80, 140, 180, 0.35), transparent);
 }
 
 .hud-bar__pin {
@@ -484,39 +473,34 @@ function togglePause(): void {
 }
 
 .hud-bar__pin--blue {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background: #4a90e8;
-  box-shadow: 0 0 4px #4a90e8;
 }
 
 .hud-bar__pin--pink {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   background: #e84888;
-  box-shadow: 0 0 4px #e84888;
 }
 
 .hud-bar__pin--trader {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: #50e878;
-  box-shadow: 0 0 6px #50e878;
 }
 
 .hud-bar__pin--golden {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   background: #ffd040;
-  box-shadow: 0 0 6px #ffd040;
 }
 
 .hud-bar__pin--player {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   background: #ffe880;
   border: 1.5px solid #fff;
-  box-shadow: 0 0 8px #ffe880;
   z-index: 3;
 }
 
@@ -528,66 +512,61 @@ function togglePause(): void {
   height: 100%;
   object-fit: cover;
   object-position: center top;
-  background: #141418;
+  background: rgba(0, 0, 0, 0.4);
   image-rendering: pixelated;
 }
 
 .hud-bar__level {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 5px;
+  right: -3px;
+  bottom: -3px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 11px;
+  font-weight: 800;
   color: #2a2010;
-  background: linear-gradient(180deg, #e8c860 0%, #a88028 100%);
-  border: 2px solid #4a3820;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  background: #d4a830;
+  border: 2px solid #3a3018;
   z-index: 2;
 }
 
-/* Vital bars (HP / MP) */
+/* Vital bars */
 
 .hud-bar__vitals {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 5px;
-  min-width: 168px;
-  max-width: 220px;
+  gap: 4px;
+  min-width: 156px;
+  max-width: 200px;
 }
 
 .vital-bar {
   position: relative;
-  height: 20px;
-  border-radius: 2px;
-  background: #0a0a0e;
-  border: 1px solid #1a1a20;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  height: 18px;
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
 .vital-bar__fill {
   position: absolute;
   inset: 0 auto 0 0;
-  border-radius: inherit;
   transition: width 0.12s linear;
 }
 
 .vital-bar--hp .vital-bar__fill {
-  background: linear-gradient(180deg, #58e858 0%, #28a828 50%, #188818 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: #44bd32;
 }
 
 .vital-bar--mp .vital-bar__fill {
-  background: linear-gradient(180deg, #58a8ff 0%, #2878d8 50%, #1858a8 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: #0097e6;
 }
 
 .vital-bar__text {
@@ -600,35 +579,44 @@ function togglePause(): void {
   font-size: 11px;
   font-weight: 700;
   color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
-  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
-/* Ability / item slots */
+/* Slots */
 
 .moba-slot {
   position: relative;
-  width: 54px;
-  height: 54px;
-  padding: 3px;
-  background:
-    linear-gradient(145deg, #6a6258 0%, #3a3630 40%, #2a2824 100%);
-  border: 1px solid #1a1814;
-  border-radius: 3px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(170, 150, 155, 0.32);
+  border-radius: 2px;
   overflow: hidden;
 }
 
+.moba-slot--ability {
+  border-color: rgba(200, 120, 160, 0.38);
+}
+
+.moba-slot--item-neon {
+  border-color: rgba(220, 190, 60, 0.45);
+}
+
+.moba-slot--item-sushi {
+  border-color: rgba(160, 100, 220, 0.45);
+}
+
+.moba-slot--item-golden {
+  border-color: rgba(220, 190, 60, 0.45);
+}
+
 .moba-slot--empty {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .moba-slot--ready {
-  box-shadow:
-    inset 0 0 0 1px rgba(80, 232, 120, 0.45),
-    0 0 10px rgba(80, 232, 120, 0.2);
+  border-color: rgba(80, 220, 120, 0.55);
 }
 
 .moba-slot__key {
@@ -637,9 +625,8 @@ function togglePause(): void {
   left: 3px;
   z-index: 3;
   font-size: 9px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.75);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1;
 }
 
@@ -654,41 +641,37 @@ function togglePause(): void {
   bottom: 2px;
   z-index: 3;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 800;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .moba-slot__cd {
   position: absolute;
-  left: 3px;
-  right: 3px;
-  bottom: 3px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
   z-index: 4;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 4px;
-  background: rgba(0, 0, 0, 0.78);
-  border-radius: 0 0 2px 2px;
+  padding-top: 3px;
+  background: rgba(0, 0, 0, 0.65);
   pointer-events: none;
 }
 
 .moba-slot__cd span {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* Neon ability icons (pink like reference) */
+/* Ability icons — neon pink, flat bg */
 
 .ability-icon {
   width: 100%;
   height: 100%;
-  background: #101014;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 1px;
+  background: rgba(8, 8, 12, 0.55);
 }
 
 .ability-icon--dash {
@@ -696,37 +679,33 @@ function togglePause(): void {
     linear-gradient(135deg, transparent 42%, #ff44cc 42%, #ff44cc 46%, transparent 46%),
     linear-gradient(135deg, transparent 48%, #ff66dd 48%, #ff66dd 52%, transparent 52%),
     linear-gradient(135deg, transparent 54%, #ff44cc 54%, #ff44cc 58%, transparent 58%),
-    #101014;
-  filter: drop-shadow(0 0 4px rgba(255, 68, 204, 0.8));
+    rgba(8, 8, 12, 0.55);
+  filter: drop-shadow(0 0 3px rgba(255, 68, 204, 0.65));
 }
 
 .ability-icon--hide {
   background:
     radial-gradient(circle at 50% 50%, #ff44cc 0%, #ff44cc 28%, transparent 30%),
-    radial-gradient(circle at 50% 50%, rgba(255, 100, 220, 0.4) 0%, transparent 55%),
-    #101014;
-  filter: drop-shadow(0 0 5px rgba(255, 68, 204, 0.75));
+    rgba(8, 8, 12, 0.55);
+  filter: drop-shadow(0 0 3px rgba(255, 68, 204, 0.6));
 }
 
 .ability-icon--trade {
   background:
     radial-gradient(circle at 50% 50%, transparent 55%, #ff44cc 56%, #ff44cc 62%, transparent 63%),
-    radial-gradient(circle at 50% 50%, rgba(255, 68, 204, 0.35) 0%, transparent 50%),
-    #101014;
-  filter: drop-shadow(0 0 5px rgba(255, 68, 204, 0.75));
+    rgba(8, 8, 12, 0.55);
+  filter: drop-shadow(0 0 3px rgba(255, 68, 204, 0.6));
 }
 
 .ability-icon--ult {
   background:
-    linear-gradient(0deg, transparent 35%, #ff44cc 35%, #ff44cc 40%, transparent 40%),
-    linear-gradient(0deg, transparent 48%, #ff66dd 48%, #ff66dd 53%, transparent 53%),
-    linear-gradient(0deg, transparent 61%, #ff44cc 61%, #ff44cc 66%, transparent 66%),
-    #101014;
-  opacity: 0.35;
-  filter: drop-shadow(0 0 3px rgba(255, 68, 204, 0.4));
+    linear-gradient(0deg, transparent 35%, rgba(255, 68, 204, 0.35) 35%, rgba(255, 68, 204, 0.35) 40%, transparent 40%),
+    linear-gradient(0deg, transparent 48%, rgba(255, 102, 221, 0.3) 48%, rgba(255, 102, 221, 0.3) 53%, transparent 53%),
+    linear-gradient(0deg, transparent 61%, rgba(255, 68, 204, 0.35) 61%, rgba(255, 68, 204, 0.35) 66%, transparent 66%),
+    rgba(8, 8, 12, 0.55);
 }
 
-/* Item images */
+/* Items */
 
 .hud-bar__item-img {
   display: block;
@@ -734,16 +713,16 @@ function togglePause(): void {
   height: 100%;
   object-fit: contain;
   padding: 4px;
-  background: #101014;
+  background: rgba(8, 8, 12, 0.45);
   image-rendering: pixelated;
 }
 
 .hud-bar__item-img--neon {
-  filter: drop-shadow(0 0 6px rgba(255, 220, 60, 0.85));
+  filter: drop-shadow(0 0 5px rgba(0, 200, 255, 0.75));
 }
 
 .hud-bar__item-img--sushi {
-  filter: drop-shadow(0 0 6px rgba(180, 80, 255, 0.85));
+  filter: drop-shadow(0 0 5px rgba(140, 80, 255, 0.7));
 }
 
 .hud-bar__item-golden {
@@ -752,53 +731,45 @@ function togglePause(): void {
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: #101014;
-  font-size: 24px;
+  background: rgba(8, 8, 12, 0.45);
+  font-size: 22px;
   color: #ffd040;
-  filter: drop-shadow(0 0 8px rgba(255, 208, 64, 0.8));
+  filter: drop-shadow(0 0 5px rgba(255, 208, 64, 0.65));
 }
 
-/* Gold + tool buttons */
+/* Meta */
 
 .hud-bar__gold {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-right: 2px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .hud-bar__gold-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 30%, #ffe880, #d4a020 45%, #a07010 100%);
+  background: #d4a020;
   border: 1px solid #806010;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .hud-bar__tools {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
 
 .hud-bar__tool {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   cursor: pointer;
   border: none;
-  border-radius: 3px;
-  background:
-    linear-gradient(145deg, #5a5858 0%, #383840 50%, #282830 100%);
-  border: 1px solid #1a1a20;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 2px 4px rgba(0, 0, 0, 0.35);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(140, 140, 150, 0.28);
 }
 
 .hud-bar__tool:disabled {
@@ -812,25 +783,24 @@ function togglePause(): void {
   height: 100%;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 16px 16px;
-  opacity: 0.85;
+  background-size: 15px 15px;
+  opacity: 0.75;
+}
+
+.hud-bar__tool-icon--trash {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2'%3E%3Cpath d='M4 7h16M9 7V5h6v2M7 7l1 12h8l1-12'/%3E%3C/svg%3E");
 }
 
 .hud-bar__tool-icon--bag {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ddd' stroke-width='2'%3E%3Cpath d='M6 8h12l-1 12H7L6 8z'/%3E%3Cpath d='M9 8V6a3 3 0 016 0v2'/%3E%3C/svg%3E");
-}
-
-.hud-bar__tool-icon--book {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ddd' stroke-width='2'%3E%3Cpath d='M4 6h16v14H4z'/%3E%3Cpath d='M4 6c0-2 4-2 8 0s8 2 8 0'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2'%3E%3Cpath d='M6 8h12l-1 12H7L6 8z'/%3E%3Cpath d='M9 8V6a3 3 0 016 0v2'/%3E%3C/svg%3E");
 }
 
 .hud-bar__tool-icon--gear {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ddd' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/%3E%3C/svg%3E");
 }
 
 @media (max-width: 960px) {
   .hud-bar__strip {
-    max-width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -840,18 +810,18 @@ function togglePause(): void {
   }
 
   .hud-bar__vitals {
-    min-width: 120px;
+    min-width: 110px;
   }
 
   .moba-frame--map,
   .moba-frame--portrait {
-    width: 72px;
-    height: 72px;
+    width: 68px;
+    height: 68px;
   }
 
   .moba-slot {
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
   }
 }
 
