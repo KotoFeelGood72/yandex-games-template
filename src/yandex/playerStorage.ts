@@ -1,4 +1,5 @@
-import { getYsdk, initYandex, type YsdkPlayer } from '@/yandex/sdk'
+import { getSdkPlayer } from '@/yandex/player'
+import { getYsdk } from '@/yandex/sdk'
 
 /** Ключ сохранения в облаке игрока — замените на свой. */
 export const DEFAULT_SAVE_KEY = 'app_save'
@@ -8,8 +9,6 @@ const DEV_LS_PREFIX = 'yandex-template-save:'
 /** Яндекс SDK: не чаще ~20 запросов setData за 5 минут */
 const SET_DATA_MIN_GAP_MS = 15_000
 
-let cachedPlayer: YsdkPlayer | null = null
-let playerPromise: Promise<YsdkPlayer | null> | null = null
 let playerBlob: Record<string, unknown> | null = null
 let playerBlobPromise: Promise<Record<string, unknown>> | null = null
 let pendingFlush = false
@@ -25,27 +24,8 @@ function toPlainRecord(value: Record<string, unknown>): Record<string, unknown> 
   return JSON.parse(JSON.stringify(value)) as Record<string, unknown>
 }
 
-async function resolvePlayer(): Promise<YsdkPlayer | null> {
-  if (cachedPlayer) return cachedPlayer
-  if (playerPromise) return playerPromise
-
-  playerPromise = (async () => {
-    await initYandex()
-    const sdk = getYsdk()
-    if (!sdk?.getPlayer) return null
-    try {
-      cachedPlayer = await sdk.getPlayer({ scopes: false })
-      return cachedPlayer
-    } catch {
-      return null
-    }
-  })()
-
-  return playerPromise
-}
-
 export async function ensurePlayer(): Promise<boolean> {
-  return (await resolvePlayer()) !== null
+  return (await getSdkPlayer()) !== null
 }
 
 async function loadPlayerBlob(): Promise<Record<string, unknown>> {
@@ -58,7 +38,7 @@ async function loadPlayerBlob(): Promise<Record<string, unknown>> {
       return playerBlob
     }
 
-    const player = await resolvePlayer()
+    const player = await getSdkPlayer()
     if (!player?.getData) {
       playerBlob = {}
       return playerBlob
@@ -89,7 +69,7 @@ function schedulePlayerWrite(flush: boolean): void {
 async function flushPlayerData(forceFlush = false): Promise<void> {
   if (shouldUseLocalStorage() || !playerBlob) return
 
-  const player = await resolvePlayer()
+  const player = await getSdkPlayer()
   if (!player?.setData) return
 
   const now = Date.now()
@@ -156,9 +136,17 @@ export async function savePlayerData(
     return
   }
 
+  if (!getYsdk()?.getPlayer) return
+
   const blob = await loadPlayerBlob()
   blob[key] = toPlainRecord(
     data && typeof data === 'object' ? (data as Record<string, unknown>) : { value: data },
   )
   schedulePlayerWrite(flush)
+}
+
+/** Сброс кэша облачного blob после смены аккаунта. */
+export function resetPlayerStorageCache(): void {
+  playerBlob = null
+  playerBlobPromise = null
 }

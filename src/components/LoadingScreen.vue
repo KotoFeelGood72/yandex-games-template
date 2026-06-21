@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { APP_TITLE } from '@/config/env'
+
 const progress = ref(0)
 
 function setProgress(value: number): void {
@@ -22,7 +24,7 @@ defineExpose({ setProgress, finish, waitUntilReady })
 <template>
   <div class="loading-screen" role="status" aria-live="polite" aria-busy="true">
     <div class="loading-screen__content">
-      <p class="loading-screen__title">Yandex Games Template</p>
+      <p class="loading-screen__title">{{ APP_TITLE }}</p>
       <div class="loading-screen__progress" aria-hidden="true">
         <div class="loading-screen__progress-track">
           <div class="loading-screen__progress-fill" :style="{ width: `${progress * 100}%` }" />

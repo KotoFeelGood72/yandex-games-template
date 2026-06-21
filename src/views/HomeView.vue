@@ -10,6 +10,7 @@ import { fetchLeaderboardEntries, LEADERBOARD_NAME, submitLeaderboardScore } fro
 import { loadPlayerData, savePlayerData } from '@/yandex/playerStorage'
 import { getLang, isYsdkReady } from '@/yandex/sdk'
 import { tryShowPlatformReviewWhenSafe } from '@/yandex/reviewPrompt'
+import { APP_TITLE } from '@/config/env'
 
 const sdkReady = ref(isYsdkReady())
 const lang = ref(getLang())
@@ -59,7 +60,7 @@ function onStartupAd(): void {
 <template>
   <main class="home">
     <header class="home__header">
-      <h1 class="home__title">Yandex Games Template</h1>
+      <h1 class="home__title">{{ APP_TITLE }}</h1>
       <p class="home__subtitle">Минимальный каркас с интеграцией Yandex SDK</p>
     </header>
 

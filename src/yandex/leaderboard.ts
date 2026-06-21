@@ -1,7 +1,8 @@
-import { getYsdk } from '@/yandex/sdk'
-import { ensurePlayer } from '@/yandex/playerStorage'
+import { getYsdk, isSdkMethodAvailable } from '@/yandex/sdk'
+import { getSdkPlayer } from '@/yandex/player'
+import type { YsdkLeaderboardEntry } from '@/yandex/types'
 
-/** Техническое имя таблицы в консоли Яндекс Игр — замените на своё. */
+/** Техническое имя таблицы в консоли — замените на своё. */
 export const LEADERBOARD_NAME = 'leaderboard'
 
 export interface LeaderEntry {
@@ -11,23 +12,16 @@ export interface LeaderEntry {
   isCurrentPlayer: boolean
 }
 
-interface YandexLeaderboardsApi {
-  setLeaderboardScore(name: string, score: number): Promise<void>
-  getLeaderboardEntries(
-    name: string,
-    opts?: {
-      quantityTop?: number
-      includeUser?: boolean
-      quantityAround?: number
-    },
-  ): Promise<{
-    entries?: Array<{
-      rank: number
-      score: number
-      player?: { publicName?: string }
-    }>
-    userRank?: number
-  }>
+function mapEntry(
+  entry: YsdkLeaderboardEntry,
+  userRank: number | undefined,
+): LeaderEntry {
+  return {
+    rank: entry.rank,
+    name: entry.player?.publicName?.trim() || 'Игрок',
+    score: entry.score,
+    isCurrentPlayer: userRank != null && entry.rank === userRank,
+  }
 }
 
 function getDevMockEntries(localBest = 0): LeaderEntry[] {
@@ -45,60 +39,84 @@ function getDevMockEntries(localBest = 0): LeaderEntry[] {
     }))
 }
 
-export async function submitLeaderboardScore(score: number): Promise<void> {
+/**
+ * Отправить счёт в лидерборд.
+ * @see https://yandex.ru/dev/games/doc/ru/sdk/sdk-leaderboard
+ */
+export async function submitLeaderboardScore(score: number, extraData?: string): Promise<void> {
   const normalized = Math.floor(score)
   if (normalized <= 0) return
 
   const sdk = getYsdk()
-  if (!sdk?.getLeaderboards) {
+  if (!sdk) {
     if (import.meta.env.DEV) {
       console.info('[leaderboard] dev stub setScore', LEADERBOARD_NAME, normalized)
     }
     return
   }
 
-  await ensurePlayer()
+  if (!(await isSdkMethodAvailable('leaderboards.setScore'))) {
+    if (import.meta.env.DEV) console.info('[leaderboard] setScore unavailable (auth required?)')
+    return
+  }
+
+  await getSdkPlayer()
 
   try {
-    const lb = await sdk.getLeaderboards()
-    await (lb as YandexLeaderboardsApi).setLeaderboardScore(LEADERBOARD_NAME, normalized)
+    if (sdk.leaderboards?.setScore) {
+      await sdk.leaderboards.setScore(LEADERBOARD_NAME, normalized, extraData)
+      return
+    }
+
+    if (sdk.getLeaderboards) {
+      const lb = await sdk.getLeaderboards()
+      await lb.setLeaderboardScore(LEADERBOARD_NAME, normalized)
+    }
   } catch (err) {
-    if (import.meta.env.DEV) console.warn('[leaderboard] setLeaderboardScore failed', err)
+    if (import.meta.env.DEV) console.warn('[leaderboard] setScore failed', err)
   }
 }
 
 export async function fetchLeaderboardEntries(localBest = 0): Promise<LeaderEntry[]> {
   const sdk = getYsdk()
-  if (!sdk?.getLeaderboards) {
+  if (!sdk) {
     if (import.meta.env.DEV) return getDevMockEntries(localBest)
     return []
   }
 
-  await ensurePlayer()
+  await getSdkPlayer()
 
   try {
-    const lb = await sdk.getLeaderboards()
-    const result = await (lb as YandexLeaderboardsApi).getLeaderboardEntries(LEADERBOARD_NAME, {
-      quantityTop: 10,
-      includeUser: true,
-      quantityAround: 3,
-    })
+    let userRank: number | undefined
+    let entries: YsdkLeaderboardEntry[] = []
 
-    const userRank = result.userRank
-    const entries = (result.entries ?? []).map((entry) => ({
-      rank: entry.rank,
-      name: entry.player?.publicName?.trim() || 'Игрок',
-      score: entry.score,
-      isCurrentPlayer: userRank != null && entry.rank === userRank,
-    }))
+    if (sdk.leaderboards?.getEntries) {
+      const result = await sdk.leaderboards.getEntries(LEADERBOARD_NAME, {
+        quantityTop: 10,
+        includeUser: true,
+        quantityAround: 3,
+      })
+      userRank = result.userRank
+      entries = result.entries ?? []
+    } else if (sdk.getLeaderboards) {
+      const lb = await sdk.getLeaderboards()
+      const result = await lb.getLeaderboardEntries(LEADERBOARD_NAME, {
+        quantityTop: 10,
+        includeUser: true,
+        quantityAround: 3,
+      })
+      userRank = result.userRank
+      entries = result.entries ?? []
+    }
 
-    if (localBest <= 0) return entries
+    const mapped = entries.map((entry) => mapEntry(entry, userRank))
+    if (localBest <= 0) return mapped
 
-    return entries.map((entry) =>
+    return mapped.map((entry) =>
       entry.isCurrentPlayer && localBest > entry.score ? { ...entry, score: localBest } : entry,
     )
   } catch (err) {
-    if (import.meta.env.DEV) console.warn('[leaderboard] getLeaderboardEntries failed', err)
+    if (import.meta.env.DEV) console.warn('[leaderboard] getEntries failed', err)
     throw err
   }
 }

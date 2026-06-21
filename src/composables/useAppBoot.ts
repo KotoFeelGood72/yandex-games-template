@@ -1,4 +1,5 @@
 import { markAppReady } from '@/yandex/appReady'
+import { runYandexBootstrap } from '@/yandex/bootstrap'
 import { initYandex } from '@/yandex/sdk'
 
 const MIN_BOOT_MS = 800
@@ -25,6 +26,7 @@ export async function runAppBoot(onProgress?: (value: number) => void): Promise<
 
   actualProgress = 0.2
   await initYandex()
+  await runYandexBootstrap()
   actualProgress = 0.85
   publish()
 
