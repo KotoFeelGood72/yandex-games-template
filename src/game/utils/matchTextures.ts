@@ -2,7 +2,6 @@ import Phaser from 'phaser'
 
 /** Процедурные текстуры для Neon Stick Hunt */
 export function createMatchTextures(scene: Phaser.Scene): void {
-  createStickTexture(scene, 'stick-neon', '#00f5ff', '#0088aa')
   createStickTexture(scene, 'stick-sushi', '#ff44cc', '#aa2288')
   createStickTexture(scene, 'stick-golden', '#ffd54a', '#cc9900')
 }

@@ -7,6 +7,10 @@ import {
   DECORATOR_TEXTURE_PREFIX,
 } from '../data/decoratorConfig'
 import { ARENA_BG_TEXTURE_KEY } from '../data/mapConfig'
+import {
+  NEON_TEXTURE_IDS,
+  NEON_TEXTURE_PREFIX,
+} from '../data/neonStickConfig'
 import { createMatchTextures } from '../utils/matchTextures'
 
 const TEAM_FOLDERS = ['red', 'yellow'] as const
@@ -20,6 +24,10 @@ export class PreloadScene extends Phaser.Scene {
     const baseUrl = import.meta.env.BASE_URL
 
     this.load.image(ARENA_BG_TEXTURE_KEY, `${baseUrl}bg.png`)
+
+    for (const id of NEON_TEXTURE_IDS) {
+      this.load.image(`${NEON_TEXTURE_PREFIX}-${id}`, `${baseUrl}neons/${id}.png`)
+    }
 
     for (const folder of TEAM_FOLDERS) {
       for (const dir of FACING_DIRS) {

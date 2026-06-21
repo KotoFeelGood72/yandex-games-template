@@ -15,7 +15,6 @@ export const DASH_SPEED_MULTIPLIER = 2.8
 
 export const HIDE_COOLDOWN_MS = 12000
 export const HIDE_DURATION_MS = 2000
-export const HIDE_DETECTION_MULTIPLIER = 0.45
 
 export const CATCH_INVINCIBILITY_MS = 2000
 export const CATCH_KNOCKBACK = 280

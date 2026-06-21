@@ -8,15 +8,24 @@ import type { StickSpawnSystem } from './StickSpawnSystem'
 import { distance } from '../utils/math'
 import { randomRange } from '../utils/random'
 
-const TARGET_CLAIM_RADIUS = 72
-const APPROACH_OFFSET = 36
-const MAP_WANDER_MARGIN = 160
-const RETARGET_MIN_MS = 1800
-const RETARGET_MAX_MS = 3600
-const STUCK_MS = 1000
-const MIN_TARGET_DIST = 64
-const STICK_SEARCH_RADIUS = 1600
+const MAP_WANDER_MARGIN = 120
+const RETARGET_MIN_MS = 2200
+const RETARGET_MAX_MS = 4800
+const STUCK_MS = 1400
+const MIN_TARGET_DIST = 180
+const MIN_BOT_SPACING = 220
 const MOVE_THRESHOLD = 8
+const STICK_CHANCE = 0.38
+const SECTOR_COLS = 5
+const SECTOR_ROWS = 4
+const SECTOR_PADDING = 80
+
+interface MapRect {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
 
 interface BotMotionState {
   x: number
@@ -67,13 +76,11 @@ export class BotSystem {
   }
 
   prepareForMatchStart(time: number): void {
-    const sticks = this.stickSpawn.getActiveSticks()
-
     for (const bot of this.all) {
       bot.setMovement(0, 0)
       bot.body.setVelocity(0, 0)
-      this.assignNextTarget(bot, sticks)
-      bot.retargetAt = time + randomRange(800, 1600) + bot.slotIndex * 120
+      this.assignWanderTarget(bot, true)
+      bot.retargetAt = time + randomRange(600, 1400) + bot.slotIndex * 180
       const motion = this.getMotion(bot)
       motion.stuckMs = 0
       motion.x = bot.x
@@ -95,7 +102,7 @@ export class BotSystem {
       const motion = this.getMotion(bot)
       const moved = distance(bot.x, bot.y, motion.x, motion.y)
 
-      if (moved < 3) {
+      if (moved < 4) {
         motion.stuckMs += delta
       } else {
         motion.stuckMs = 0
@@ -138,84 +145,144 @@ export class BotSystem {
   }
 
   private assignNextTarget(bot: BotPlayer, sticks: Stick[]): void {
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const candidate = this.buildTarget(bot, sticks, attempt)
-      if (distance(bot.x, bot.y, candidate.x, candidate.y) >= MIN_TARGET_DIST) {
-        bot.targetX = candidate.x
-        bot.targetY = candidate.y
+    const preferStick = Math.random() < STICK_CHANCE && sticks.length > 0
+
+    if (preferStick) {
+      const stickTarget = this.findStickTarget(bot, sticks)
+      if (stickTarget && this.isTargetAcceptable(bot, stickTarget.x, stickTarget.y)) {
+        bot.targetStickId = stickTarget.id
+        bot.targetX = stickTarget.x + randomRange(-20, 20)
+        bot.targetY = stickTarget.y + randomRange(-20, 20)
         return
       }
     }
 
-    bot.targetStickId = null
-    bot.targetX = randomRange(
-      this.bounds.left + MAP_WANDER_MARGIN,
-      this.bounds.right - MAP_WANDER_MARGIN,
-    )
-    bot.targetY = randomRange(
-      this.bounds.top + MAP_WANDER_MARGIN,
-      this.bounds.bottom - MAP_WANDER_MARGIN,
-    )
+    this.assignWanderTarget(bot, false)
   }
 
-  private buildTarget(
-    bot: BotPlayer,
-    sticks: Stick[],
-    attempt: number,
-  ): { x: number; y: number } {
-    const angle = (bot.slotIndex / TEAM_ROSTER_SIZE) * Math.PI * 2
-    const offsetX = Math.cos(angle) * APPROACH_OFFSET
-    const offsetY = Math.sin(angle) * APPROACH_OFFSET
-
-    const stick = this.findStickTarget(bot, sticks, attempt)
-    if (stick) {
-      bot.targetStickId = stick.id
-      return { x: stick.x + offsetX, y: stick.y + offsetY }
-    }
-
+  private assignWanderTarget(bot: BotPlayer, spreadStart: boolean): void {
     bot.targetStickId = null
-    return {
-      x: randomRange(
-        this.bounds.left + MAP_WANDER_MARGIN,
-        this.bounds.right - MAP_WANDER_MARGIN,
-      ),
-      y: randomRange(
-        this.bounds.top + MAP_WANDER_MARGIN,
-        this.bounds.bottom - MAP_WANDER_MARGIN,
-      ),
+
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const point = spreadStart
+        ? this.randomPointInSector(this.getBotSectorIndex(bot))
+        : this.randomWanderPoint(bot)
+
+      if (this.isTargetAcceptable(bot, point.x, point.y, spreadStart ? 80 : MIN_TARGET_DIST)) {
+        bot.targetX = point.x
+        bot.targetY = point.y
+        return
+      }
     }
+
+    const fallback = this.randomPointInSector(this.getBotSectorIndex(bot))
+    bot.targetX = fallback.x
+    bot.targetY = fallback.y
   }
 
-  private findStickTarget(bot: BotPlayer, sticks: Stick[], attempt: number): Stick | null {
-    if (sticks.length === 0) return null
-
-    const ranked = [...sticks]
-      .filter((stick) => distance(bot.x, bot.y, stick.x, stick.y) <= STICK_SEARCH_RADIUS)
-      .sort((a, b) => this.stickPriority(bot, a) - this.stickPriority(bot, b))
-
-    if (ranked.length === 0) {
-      const fallbackIndex = (bot.slotIndex + attempt) % sticks.length
-      return sticks[fallbackIndex] ?? null
+  private randomWanderPoint(bot: BotPlayer): { x: number; y: number } {
+    if (Math.random() < 0.7) {
+      return this.randomPointInSector(this.getBotSectorIndex(bot))
     }
 
-    const startIndex = (bot.slotIndex + attempt) % ranked.length
-    for (let i = 0; i < ranked.length; i++) {
-      const stick = ranked[(startIndex + i) % ranked.length]!
-      const claimed = this.all.some(
-        (other) =>
-          other !== bot &&
-          other.targetStickId === stick.id &&
-          distance(other.x, other.y, stick.x, stick.y) < TARGET_CLAIM_RADIUS,
-      )
-      if (!claimed) return stick
+    const sector = this.getBotSectorIndex(bot)
+    const neighbor = (sector + Math.floor(Math.random() * 3) + 1) % (SECTOR_COLS * SECTOR_ROWS)
+    return this.randomPointInSector(neighbor)
+  }
+
+  private findStickTarget(bot: BotPlayer, sticks: Stick[]): Stick | null {
+    const sector = this.getSectorRect(this.getBotSectorIndex(bot))
+    let best: Stick | null = null
+    let bestScore = Infinity
+
+    for (const stick of sticks) {
+      if (!this.isStickInRect(stick, sector) && Math.random() > 0.25) continue
+
+      const score = this.stickPriority(bot, stick)
+      if (score < bestScore) {
+        bestScore = score
+        best = stick
+      }
     }
 
-    return ranked[startIndex] ?? null
+    if (best) return best
+
+    for (const stick of sticks) {
+      const score = this.stickPriority(bot, stick)
+      if (score < bestScore) {
+        bestScore = score
+        best = stick
+      }
+    }
+
+    return best
   }
 
   private stickPriority(bot: BotPlayer, stick: Stick): number {
-    const teamBias = bot.team === 'blue' ? 0 : 13
-    const slotBias = ((bot.slotIndex + teamBias) * 17) % 41
-    return distance(bot.x, bot.y, stick.x, stick.y) + slotBias
+    let score = distance(bot.x, bot.y, stick.x, stick.y)
+
+    for (const other of this.all) {
+      if (other === bot) continue
+
+      const toStick = distance(other.x, other.y, stick.x, stick.y)
+      if (toStick < MIN_BOT_SPACING) {
+        score += 600
+      }
+
+      const toTarget = distance(other.targetX, other.targetY, stick.x, stick.y)
+      if (toTarget < MIN_BOT_SPACING * 0.75) {
+        score += 350
+      }
+    }
+
+    return score + randomRange(0, 40)
+  }
+
+  private isTargetAcceptable(
+    bot: BotPlayer,
+    x: number,
+    y: number,
+    minDist = MIN_TARGET_DIST,
+  ): boolean {
+    if (distance(bot.x, bot.y, x, y) < minDist) return false
+
+    for (const other of this.all) {
+      if (other === bot) continue
+      if (distance(other.x, other.y, x, y) < MIN_BOT_SPACING) return false
+      if (distance(other.targetX, other.targetY, x, y) < MIN_BOT_SPACING * 0.85) return false
+    }
+
+    return true
+  }
+
+  private getBotSectorIndex(bot: BotPlayer): number {
+    const base = bot.team === 'blue' ? 0 : TEAM_ROSTER_SIZE
+    return (base + bot.slotIndex) % (SECTOR_COLS * SECTOR_ROWS)
+  }
+
+  private getSectorRect(index: number): MapRect {
+    const col = index % SECTOR_COLS
+    const row = Math.floor(index / SECTOR_COLS) % SECTOR_ROWS
+    const cellW = this.bounds.width / SECTOR_COLS
+    const cellH = this.bounds.height / SECTOR_ROWS
+
+    return {
+      left: this.bounds.left + col * cellW + SECTOR_PADDING,
+      top: this.bounds.top + row * cellH + SECTOR_PADDING,
+      right: this.bounds.left + (col + 1) * cellW - SECTOR_PADDING,
+      bottom: this.bounds.top + (row + 1) * cellH - SECTOR_PADDING,
+    }
+  }
+
+  private randomPointInSector(index: number): { x: number; y: number } {
+    const rect = this.getSectorRect(index)
+    return {
+      x: randomRange(rect.left, rect.right),
+      y: randomRange(rect.top, rect.bottom),
+    }
+  }
+
+  private isStickInRect(stick: Stick, rect: MapRect): boolean {
+    return stick.x >= rect.left && stick.x <= rect.right && stick.y >= rect.top && stick.y <= rect.bottom
   }
 }

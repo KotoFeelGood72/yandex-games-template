@@ -98,7 +98,7 @@ onUnmounted(() => {
 .joystick {
   position: absolute;
   left: 20px;
-  bottom: 88px;
+  bottom: calc(var(--hud-bar-height, 112px) + 16px);
   touch-action: none;
   pointer-events: auto;
 }

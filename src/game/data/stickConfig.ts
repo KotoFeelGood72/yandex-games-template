@@ -11,8 +11,8 @@ export interface StickDefinition {
 export const STICK_DEFINITIONS: Record<StickKind, StickDefinition> = {
   neon: {
     kind: 'neon',
-    textureKey: 'stick-neon',
-    displaySize: 18,
+    textureKey: 'neon-1',
+    displaySize: 34,
     scoreValue: 1,
     glowColor: 0x00f5ff,
   },

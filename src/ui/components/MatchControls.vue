@@ -14,6 +14,10 @@ function onInteractUp(): void {
 function onDash(): void {
   inputStore.triggerDash()
 }
+
+function onHide(): void {
+  inputStore.triggerHide()
+}
 </script>
 
 <template>
@@ -29,6 +33,13 @@ function onDash(): void {
     </button>
     <button
       type="button"
+      class="match-controls__btn match-controls__btn--hide"
+      @pointerdown.prevent="onHide"
+    >
+      H
+    </button>
+    <button
+      type="button"
       class="match-controls__btn match-controls__btn--dash"
       @pointerdown.prevent="onDash"
     >
@@ -41,7 +52,7 @@ function onDash(): void {
 .match-controls {
   position: absolute;
   right: 20px;
-  bottom: 88px;
+  bottom: calc(var(--hud-bar-height, 112px) + 16px);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -70,6 +81,11 @@ function onDash(): void {
 .match-controls__btn--dash {
   background: rgba(0, 245, 255, 0.2);
   border-color: rgba(0, 245, 255, 0.45);
+}
+
+.match-controls__btn--hide {
+  background: rgba(124, 77, 255, 0.2);
+  border-color: rgba(124, 77, 255, 0.45);
 }
 
 @media (hover: hover) and (pointer: fine) {

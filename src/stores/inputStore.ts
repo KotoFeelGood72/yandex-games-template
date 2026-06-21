@@ -6,6 +6,7 @@ export const useInputStore = defineStore('input', () => {
   const moveY = ref(0)
   const interactHeld = ref(false)
   const dashPressed = ref(false)
+  const hidePressed = ref(false)
 
   function setMove(x: number, y: number): void {
     moveX.value = x
@@ -20,9 +21,19 @@ export const useInputStore = defineStore('input', () => {
     dashPressed.value = true
   }
 
+  function triggerHide(): void {
+    hidePressed.value = true
+  }
+
   function consumeDashPress(): boolean {
     if (!dashPressed.value) return false
     dashPressed.value = false
+    return true
+  }
+
+  function consumeHidePress(): boolean {
+    if (!hidePressed.value) return false
+    hidePressed.value = false
     return true
   }
 
@@ -31,6 +42,7 @@ export const useInputStore = defineStore('input', () => {
     moveY.value = 0
     interactHeld.value = false
     dashPressed.value = false
+    hidePressed.value = false
   }
 
   return {
@@ -38,10 +50,13 @@ export const useInputStore = defineStore('input', () => {
     moveY,
     interactHeld,
     dashPressed,
+    hidePressed,
     setMove,
     setInteract,
     triggerDash,
+    triggerHide,
     consumeDashPress,
+    consumeHidePress,
     reset,
   }
 })

@@ -33,6 +33,8 @@ export const useMatchStore = defineStore('match', () => {
 
   const dashCooldownLeft = ref(0)
   const hideCooldownLeft = ref(0)
+  const playerX = ref(0)
+  const playerY = ref(0)
 
   const formattedTime = computed(() => {
     const totalSec = Math.ceil(remainingMs.value / 1000)
@@ -87,6 +89,8 @@ export const useMatchStore = defineStore('match', () => {
     goldenY?: number
     dashCooldownLeft?: number
     hideCooldownLeft?: number
+    playerX?: number
+    playerY?: number
   }): void {
     elapsedMs.value = payload.elapsedMs
     remainingMs.value = payload.remainingMs
@@ -104,6 +108,8 @@ export const useMatchStore = defineStore('match', () => {
     if (payload.goldenY !== undefined) goldenY.value = payload.goldenY
     if (payload.dashCooldownLeft !== undefined) dashCooldownLeft.value = payload.dashCooldownLeft
     if (payload.hideCooldownLeft !== undefined) hideCooldownLeft.value = payload.hideCooldownLeft
+    if (payload.playerX !== undefined) playerX.value = payload.playerX
+    if (payload.playerY !== undefined) playerY.value = payload.playerY
   }
 
   function endMatch(result: TeamId | 'draw'): void {
@@ -153,6 +159,8 @@ export const useMatchStore = defineStore('match', () => {
     goldenY,
     dashCooldownLeft,
     hideCooldownLeft,
+    playerX,
+    playerY,
     formattedTime,
     beginMatch,
     startMatch,

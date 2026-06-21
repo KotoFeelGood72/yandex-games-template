@@ -180,6 +180,10 @@ export class MatchScene extends Phaser.Scene {
       this.matchInput.queueDash()
     }
 
+    if (inputStore.consumeHidePress()) {
+      this.matchInput.queueHide()
+    }
+
     this.matchInput.consumeDash(this.player, now)
     this.matchInput.consumeHide(this.player, now)
     this.player.update(now, deltaMs)
@@ -258,7 +262,7 @@ export class MatchScene extends Phaser.Scene {
 
     const hudDirty =
       this.exchangeSystem.isActive() ||
-      now - this.lastHudSync >= 150
+      now - this.lastHudSync >= 100
 
     if (hudDirty) {
       this.lastHudSync = now
@@ -305,6 +309,8 @@ export class MatchScene extends Phaser.Scene {
       playerGolden: this.player.inventory.golden,
       exchangeProgress: this.exchangeSystem.getProgress(),
       traderActive: !!this.traderSystem.getActiveTrader(),
+      playerX: this.player.x,
+      playerY: this.player.y,
     }
   }
 

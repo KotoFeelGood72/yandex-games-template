@@ -4,7 +4,6 @@ import { CATCHERS, PATROL_WAYPOINTS } from '../data/catcherConfig'
 import {
   CATCH_INVINCIBILITY_MS,
   CATCH_KNOCKBACK,
-  HIDE_DETECTION_MULTIPLIER,
 } from '../data/matchConfig'
 import { Catcher } from '../entities/Catcher'
 import type { Player } from '../entities/Player'
@@ -82,6 +81,7 @@ export class CatcherSystem {
       if (target) {
         if (
           distance(catcher.x, catcher.y, target.x, target.y) <= catcher.def.catchRadius &&
+          !target.isHidden(time) &&
           !target.isInvincible(time) &&
           !target.isExchanging(time)
         ) {
@@ -102,16 +102,18 @@ export class CatcherSystem {
     targets: Array<Player | BotPlayer>,
     time: number,
   ): Player | BotPlayer | null {
+    if (catcher.chaseTarget?.isHidden(time)) {
+      this.dropChase(catcher)
+    }
+
     let nearest: Player | BotPlayer | null = null
     let nearestDist = Infinity
 
     for (const target of targets) {
-      const detectRadius = target.isHidden(time)
-        ? catcher.def.detectRadius * HIDE_DETECTION_MULTIPLIER
-        : catcher.def.detectRadius
+      if (target.isHidden(time)) continue
 
       const dist = distance(catcher.x, catcher.y, target.x, target.y)
-      if (dist <= detectRadius && dist < nearestDist) {
+      if (dist <= catcher.def.detectRadius && dist < nearestDist) {
         nearest = target
         nearestDist = dist
       }
@@ -127,14 +129,20 @@ export class CatcherSystem {
     if (
       catcher.state === 'chase' &&
       time < catcher.chaseUntil &&
-      catcher.chaseTarget?.sprite.active
+      catcher.chaseTarget?.sprite.active &&
+      !catcher.chaseTarget.isHidden(time)
     ) {
       return catcher.chaseTarget
     }
 
+    this.dropChase(catcher)
+    return null
+  }
+
+  private dropChase(catcher: Catcher): void {
     catcher.state = 'patrol'
     catcher.chaseTarget = null
-    return null
+    catcher.chaseUntil = 0
   }
 
   private updateCatcherMovement(
